@@ -692,11 +692,14 @@
         }
       };
     });
-    /* 标签级投放：拖动经过时落点卡片高亮，松手在该位置交换。
-       同组内 = 两张卡互换位置；跨组/从词库来 = 插入到该卡片前。 */
-    const swapIn = (arr, a, b) => {
-      if (a === b || a < 0 || b < 0 || a >= arr.length || b >= arr.length) return;
-      const t = arr[a]; arr[a] = arr[b]; arr[b] = t;
+    /* 标签级投放：拖动经过时落点卡片高亮，松手插到那张卡之前。
+       同组内与跨组同一套语义，都是「占在目标卡前面」，不做整位互换。 */
+    const moveBefore = (arr, from, to) => {
+      if (from == null || to == null || from === to) return;
+      if (from < 0 || to < 0 || from >= arr.length || to >= arr.length) return;
+      const it = arr.splice(from, 1)[0];
+      if (it === undefined) return;
+      arr.splice(to > from ? to - 1 : to, 0, it);   // 取出后目标下标会前移一位
     };
     const libItem = en => {
       const t = S.lib.find(x => x.en === en);
@@ -709,7 +712,7 @@
       if (d.from === 'c') {
         const src = S.chars[d.i], t = src && src.tags[d.j];
         if (!t) return;
-        if (src.tags === list) { swapIn(list, d.j, pos); return; }
+        if (src.tags === list) { moveBefore(list, d.j, pos); return; }
         src.tags.splice(d.j, 1);
         list.splice(Math.min(pos, list.length), 0, t);
         return;
@@ -717,7 +720,7 @@
       if (d.from === 'g') {
         const t = S.global[d.j];
         if (!t) return;
-        if (S.global === list) { swapIn(list, d.j, pos); return; }
+        if (S.global === list) { moveBefore(list, d.j, pos); return; }
         S.global.splice(d.j, 1);
         list.splice(Math.min(pos, list.length), 0, { zh: t.zh, en: t.en, w: t.w });
         return;
