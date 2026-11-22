@@ -1190,7 +1190,6 @@
   }
   /* ---------- 改动即生成 ---------- */
   let AUTO_T = null, AUTO_BUSY = false, AUTO_PENDING = false;
-  let AUTO_BOOT = true;        // 首屏恢复已选不算「改动」，别一打开就生成
   function autoGenOn() {
     const e = document.getElementById('swAuto');
     return !!(e && e.checked);
@@ -1198,7 +1197,7 @@
   /* 增删标签、拖拽排序、加减权重、增删角色最后都会走 renderSel，统一在这里防抖，
      连点时只在停手后跑一次，不会一个动作发一次请求 */
   function scheduleAutoGen() {
-    if (AUTO_BOOT || !SEL_READY || !autoGenOn()) return;
+    if (!SEL_READY || !autoGenOn()) return;
     if (!S.global.length && !S.chars.length) return;
     clearTimeout(AUTO_T);
     AUTO_T = setTimeout(runAutoGen, 450);
@@ -1850,8 +1849,7 @@
       }
     } catch (_) {}
     SEL_READY = true;
-    renderCats(); renderSub(); renderTags(); renderSel();
-    AUTO_BOOT = false;
+    renderCats(); renderSub(); renderTags(); renderSel();   // 刷新后若开着自动生成，这里会顺手重出一遍
   }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot) : boot();
 })();
