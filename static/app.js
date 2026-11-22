@@ -566,8 +566,10 @@
       S.chars.map((c, i) => `<div class="box" data-char="${i}">
         <div class="n">${esc(c.name)}<span class="x" data-delchar="${i}">×</span></div>
         <div class="tlist">${c.tags.map((t, j) =>
-          `<span class="t" draggable="true" data-tag="${i},${j}">${esc(t.zh)}
-            <span class="w"><span data-w="${i},${j},-1">−</span><b>${t.w.toFixed(1)}</b><span data-w="${i},${j},1">+</span></span></span>`).join('')
+          `<span class="t" draggable="true" data-tag="${i},${j}">
+            <span class="tz">${esc(t.zh)}</span>
+            <span class="w"><span class="wb" data-w="${i},${j},-1">−</span><b>${t.w.toFixed(1)}</b><span class="wb" data-w="${i},${j},1">+</span></span>
+            <span class="del" data-deltag="${i},${j}" title="从她身上移除">×</span></span>`).join('')
           || '<span class="hintdrop">把标签拖进来 = 归给她</span>'}</div></div>`).join('') +
       `<div class="gsec"><div class="gn">全局标签<span class="x" data-clear="1">×</span></div>
         <div class="tgrid" data-gdrop="1">${S.global.map((t, j) =>
@@ -581,7 +583,8 @@
       const [j, d] = el.dataset.gw.split(',').map(Number);
       const t = S.global[j]; t.w = clamp(t.w + d * .1); renderSel();
     });
-    body.querySelectorAll('[data-w]').forEach(el => el.onclick = () => {
+    body.querySelectorAll('[data-w]').forEach(el => el.onclick = ev => {
+      ev.stopPropagation();
       const [i, j, d] = el.dataset.w.split(',').map(Number);
       const t = S.chars[i].tags[j]; t.w = clamp(t.w + d * .1); renderSel();
     });
@@ -603,6 +606,12 @@
       };
     });
     body.querySelectorAll('[data-gdel]').forEach(el => el.onclick = () => { S.global.splice(+el.dataset.gdel, 1); renderSel(); });
+    body.querySelectorAll('[data-deltag]').forEach(el => el.onclick = ev => {
+      ev.stopPropagation();
+      const [i, j] = el.dataset.deltag.split(',').map(Number);
+      const c = S.chars[i];
+      if (c && c.tags[j]) { c.tags.splice(j, 1); renderSel(); }
+    });
     body.querySelectorAll('[data-delchar]').forEach(el => el.onclick = () => { S.chars.splice(+el.dataset.delchar, 1); renderSel(); });
     const clr = body.querySelector('[data-clear]'); if (clr) clr.onclick = () => { S.global = []; renderSel(); };
 
