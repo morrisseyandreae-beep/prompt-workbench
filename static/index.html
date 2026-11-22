@@ -94,14 +94,16 @@
   .submenu-list span.on{background:linear-gradient(135deg,#5a95f7,#3a72d4);border-color:transparent;color:#fff;font-weight:600}
   .submenu-list .cust{border-color:#bcd7ff;background:#f5faff;color:#2f6fe0}
   .submenu-list .addchar{border-style:dashed;border-color:#bcd7ff;color:#2f6fe0;background:#f5faff}
-  .taglist{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);
-    grid-auto-rows:min-content;gap:9px;align-content:start;padding-right:2px}
-  .tag{border:1px solid #eef4fc;border-radius:12px;padding:9px 10px;background:#fbfdff;font-size:12.5px;
+  /* 标签卡：按窗口宽度自动增减列，卡片尺寸夹在 132~160px 之间，默认宽度下 4 列 */
+  .taglist{flex:1;min-height:0;overflow-y:auto;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(132px,160px));
+    justify-content:start;grid-auto-rows:min-content;gap:7px;align-content:start;padding-right:2px}
+  .tag{border:1px solid #eef4fc;border-radius:10px;padding:7px 8px;background:#fbfdff;font-size:12px;
     color:#41526b;cursor:grab;transition:.15s;position:relative}
   .tag:hover{border-color:#bcd7ff;box-shadow:0 6px 16px rgba(76,139,245,.1);transform:translateY(-1px)}
-  .tag .zht{display:block;font-weight:600;color:#2f405c;padding-left:16px}
-  .tag i{display:block;color:#9db0c8;font-size:11px;font-style:normal;margin-top:2px}
-  .favbtn{position:absolute;left:7px;top:9px;color:#d7e0ec;font-size:11px;cursor:pointer;line-height:1}
+  .tag .zht{display:block;font-weight:600;color:#2f405c;padding-left:14px}
+  .tag i{display:block;color:#9db0c8;font-size:10.5px;font-style:normal;margin-top:1px}
+  .favbtn{position:absolute;left:6px;top:7px;color:#d7e0ec;font-size:10.5px;cursor:pointer;line-height:1}
   .favbtn:hover,.favbtn.on{color:#f0b429}
   .empty{padding:26px;text-align:center;color:#93a3b9;grid-column:1/-1}
 
@@ -259,6 +261,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122sec"></script>
+<script src="app.js?v=20261122anima"></script>
 </body>
 </html>
