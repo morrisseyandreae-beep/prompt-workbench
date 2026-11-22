@@ -7,7 +7,7 @@ from urllib.parse import unquote, urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PORT = 8901
+PORT = 10086
 
 _cache = {}
 CHARS_PATH = os.path.join(HERE, "custom_chars.json")
