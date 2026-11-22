@@ -120,7 +120,7 @@
     applyTheme();
     saveSettings();
     clearTimeout(setTheme._t);
-    setTheme._t = setTimeout(() => root.classList.remove('theming'), 780);
+    setTheme._t = setTimeout(() => root.classList.remove('theming'), 500);
   }
 
   function initTheme() {
