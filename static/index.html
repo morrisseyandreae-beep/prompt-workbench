@@ -204,7 +204,7 @@
   .tr .th{display:block;font-size:10.5px;color:#a9b8cb;margin-bottom:3px}
 
   /* ===== 日夜切换开关（素材来自 ai/日月） ===== */
-  .dnswitch{display:block;width:62px;height:29px;padding:0;border:0;background:transparent;cursor:pointer;
+  .dnswitch{display:block;width:50px;height:23px;margin-left:-6px;padding:0;border:0;background:transparent;cursor:pointer;
     outline:none;border-radius:999px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.16));
     transition:filter .5s,transform .3s}
   .dnswitch:hover{filter:drop-shadow(0 4px 12px rgba(0,0,0,.22))}
@@ -382,6 +382,7 @@
 <body>
 
 <header>
+  <div class="logo"><i>✦</i> 提示词<b>工作台</b> <i>✦</i></div>
   <button class="dnswitch is-day" id="btnTheme" type="button" role="switch" aria-checked="false" title="切换日间 / 夜间模式" aria-label="切换日间 / 夜间模式">
       <svg class="switch-svg" viewBox="40 40 480 220" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -530,7 +531,6 @@
               fill="none" stroke="rgba(0,0,0,.13)" stroke-width="1.5"/>
       </svg>
     </button>
-  <div class="logo"><i>✦</i> 提示词<b>工作台</b> <i>✦</i></div>
   <div class="steps"><i>① 反推 / 描述</i><i class="on">② 挑标签</i><i>③ 出结果</i></div>
   <div class="guide">📖 说明书</div>
   <div class="sp"></div>
@@ -625,6 +625,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122dark5"></script>
+<script src="app.js?v=20261122dark6"></script>
 </body>
 </html>
