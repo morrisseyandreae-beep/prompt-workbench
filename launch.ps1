@@ -31,7 +31,7 @@ function Find-Python {
 }
 
 # 已经在跑就直接开浏览器
-$listening = Get-NetTCPConnection -LocalPort 8901 -State Listen -ErrorAction SilentlyContinue
+$listening = Get-NetTCPConnection -LocalPort 10086 -State Listen -ErrorAction SilentlyContinue
 if (-not $listening) {
     $py = Find-Python
     if (-not $py) {
@@ -48,6 +48,6 @@ if (-not $listening) {
     }
     Start-Sleep -Seconds 4
 }
-Start-Process 'http://127.0.0.1:8901'
+Start-Process 'http://127.0.0.1:10086'
 Write-Host ""
-Write-Host "工作台已启动：http://127.0.0.1:8901" -ForegroundColor Green
+Write-Host "工作台已启动：http://127.0.0.1:10086" -ForegroundColor Green

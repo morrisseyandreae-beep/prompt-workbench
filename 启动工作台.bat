@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
-netstat -ano | findstr ":8901" | findstr "LISTENING" >nul
+netstat -ano | findstr ":10086" | findstr "LISTENING" >nul
 if not errorlevel 1 goto openpage
 
 echo 正在启动提示词工作台...
@@ -61,4 +61,4 @@ start "" %PYRUN% "%~dp0app.py"
 ping -n 5 127.0.0.1 >nul
 
 :openpage
-start "" "http://127.0.0.1:8901"
+start "" "http://127.0.0.1:10086"
