@@ -2,7 +2,7 @@
 
 基于 [Overstar66/prompt-workbench](https://github.com/Overstar66/prompt-workbench) 修改，仅作个人使用，与原仓库无隶属关系。
 
-上游能力（图反推、AI 扩写、词库点选、MOSS / WAI / Pony 输出）全部保留，以下为在此基础上新增与修复的内容。
+上游能力（图反推、AI 扩写、词库点选、MOSS / WAI / Pony 输出）全部保留，并新增对 Anima 系列生图模型的提示词支持，以下为在此基础上新增与修复的内容。
 
 ## 快速开始使用
 
