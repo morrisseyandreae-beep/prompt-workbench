@@ -614,7 +614,7 @@
       LS.set('selState', { chars: S.chars, global: S.global });
     } catch (_) {}
   }
-  function renderSel() {
+  function renderSel(opt) {
     saveSel();
     const body = $('#selBody');
     const prev = SEL_ANIM ? snapSel(body) : null;
@@ -665,7 +665,7 @@
         const s2 = favs();
         s2.has(t.en) ? s2.delete(t.en) : s2.add(t.en);
         LS.set('favTags', [...s2]);
-        renderSel(); renderTags();
+        renderSel({ noAuto: 1 }); renderTags();
         toast(s2.has(t.en) ? '已收藏' : '已取消收藏');
       };
     });
@@ -824,6 +824,7 @@
       toGlobal(e.dataTransfer);
     };
     if (prev) playFlip(body, prev);
+    if (!(opt && opt.noAuto)) scheduleAutoGen();   // 收藏这类不产生新标签的渲染别触发重出
   }
 
   /* ===================== 结果 ===================== */
@@ -1152,10 +1153,11 @@
       }),
     }));
   }
-  async function doGenerate() {
-    if (!S.global.length && !S.chars.length) { toast('先选标签'); return; }
+  async function doGenerate(opt) {
+    const silent = !!(opt && opt.silent);     // 自动生成：不弹常驻提示、不报「完成」
+    if (!S.global.length && !S.chars.length) { if (!silent) toast('先选标签'); return; }
     const tags = S.global.map(t => ({ tag: t.en, weight: t.w }));
-    const stopWait = toastSticky('生成中…（含本地润色，预计 40-90 秒）');
+    const stopWait = silent ? null : toastSticky('生成中…（含本地润色，预计 40-90 秒）');
     try {
       const wantMoss = S.sec.moss !== false;
       const d = await api('/api/generate', {
@@ -1182,8 +1184,36 @@
         ['Krea2（自然语言）', d.krea || '—'],
         ['负向 · Krea2', d.neg_krea || '该模型 CFG=1，负向不生效（需把 KSampler cfg 调到 3 以上才起作用）'],
       ]);
-      stopWait(); toast('完成' + (d.note ? '（' + d.note + '）' : ''));
-    } catch (e) { toast('生成失败：' + e.message); }
+      stopWait && stopWait();
+      if (!silent) toast('完成' + (d.note ? '（' + d.note + '）' : ''));
+    } catch (e) { toast((silent ? '自动生成失败：' : '生成失败：') + e.message); }
+  }
+  /* ---------- 改动即生成 ---------- */
+  let AUTO_T = null, AUTO_BUSY = false, AUTO_PENDING = false;
+  let AUTO_BOOT = true;        // 首屏恢复已选不算「改动」，别一打开就生成
+  function autoGenOn() {
+    const e = document.getElementById('swAuto');
+    return !!(e && e.checked);
+  }
+  /* 增删标签、拖拽排序、加减权重、增删角色最后都会走 renderSel，统一在这里防抖，
+     连点时只在停手后跑一次，不会一个动作发一次请求 */
+  function scheduleAutoGen() {
+    if (AUTO_BOOT || !SEL_READY || !autoGenOn()) return;
+    if (!S.global.length && !S.chars.length) return;
+    clearTimeout(AUTO_T);
+    AUTO_T = setTimeout(runAutoGen, 450);
+  }
+  async function runAutoGen() {
+    if (AUTO_BUSY) { AUTO_PENDING = true; return; }   // 生成中又来改动 → 排一次补跑
+    AUTO_BUSY = true;
+    const btn = $('#btnGen'), old = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = '生成中…'; btn.disabled = true; }
+    try { await doGenerate({ silent: true }); }
+    finally {
+      AUTO_BUSY = false;
+      if (btn) { btn.textContent = old; btn.disabled = false; }
+      if (AUTO_PENDING) { AUTO_PENDING = false; scheduleAutoGen(); }
+    }
   }
   async function doMoss() {
     if (!S.global.length && !S.chars.length) {
@@ -1695,6 +1725,7 @@
     if (c.neg) $('#selNeg').value = c.neg === 'lite' ? 'simple' : c.neg;
     if (c.polishMode && $('#selPolish')) $('#selPolish').value = c.polishMode;
     if (c.nsfw !== undefined) S.nsfw = !!c.nsfw;
+    if (c.autoGen !== undefined && $('#swAuto')) $('#swAuto').checked = !!c.autoGen;
     if (c.favTop !== undefined) S.favTop = !!c.favTop;
     THEME = c.theme === 'dark' ? 'dark' : 'light';
     applyTheme();
@@ -1710,15 +1741,26 @@
       polishMode: $('#selPolish') ? $('#selPolish').value : 'api',
       neg: $('#selNeg').value,
       nsfw: S.nsfw,
+      autoGen: $('#swAuto') ? $('#swAuto').checked : false,
       favTop: S.favTop,
       trans: TR_MODE,
       theme: THEME,
     });
   }
   function bindSettings() {
-    ['#swApi', '#swNsfwTop', '#selDensity', '#selNeg', '#selPolish'].forEach(sel => {
+    ['#swApi', '#swNsfwTop', '#selDensity', '#selNeg', '#selPolish', '#swAuto'].forEach(sel => {
       const el = document.querySelector(sel);
       if (el) el.addEventListener('change', saveSettings);
+    });
+    /* 影响输出内容的几项：改完也重出一次结果（与卡片改动同一套防抖） */
+    ['#selDensity', '#selNeg', '#selPolish', '#swNsfwTop'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.addEventListener('change', scheduleAutoGen);
+    });
+    const sa = $('#swAuto');
+    if (sa) sa.addEventListener('change', () => {
+      if (sa.checked) { toast('已开启：改动标签后自动出结果'); scheduleAutoGen(); }
+      else { clearTimeout(AUTO_T); toast('已关闭自动生成'); }
     });
     document.querySelectorAll('#trCtl .segbtn').forEach(btn => {
       btn.onclick = () => { TR_MODE = btn.dataset.tr; renderTrCtl(); saveSettings(); fillTranslations(); };
@@ -1809,6 +1851,7 @@
     } catch (_) {}
     SEL_READY = true;
     renderCats(); renderSub(); renderTags(); renderSel();
+    AUTO_BOOT = false;
   }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot) : boot();
 })();
