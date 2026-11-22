@@ -1128,15 +1128,18 @@
   }
   function doReverse(file) {
     if (!/^image\//.test(file.type)) { toast('请选择图片文件'); return; }
-    const img = new Image();
-    img.onload = () => toast('已选图片 ' + file.name + '（' + img.width + '×' + img.height + '）');
-    img.src = URL.createObjectURL(file);
     const fd = new FormData();
     fd.append('image', file);
-    toast('反推中…（WD14 打标，稍等）');
-    const polish = '0';
-    fetch('/api/reverse_upload?polish=' + polish, { method: 'POST', body: fd })
+    /* 首次要加载几百 MB 的 onnx，几秒到几十秒都有可能，提示得一直挂着 */
+    const stopWait = toastSticky('反推中…（WD14 打标，首次加载模型会慢一点）');
+    const drop = $('#dropImg');
+    const dropHtml = drop ? drop.innerHTML : '';
+    if (drop) { drop.classList.add('busy'); drop.innerHTML = '反推中…<br>请稍等'; }
+    const done = () => { stopWait(); if (drop) { drop.classList.remove('busy'); drop.innerHTML = dropHtml; } };
+    fetch('/api/reverse_upload?polish=0', { method: 'POST', body: fd })
       .then(r => r.json())
+      .then(d => { done(); return d; })
+      .catch(e => { done(); throw e; })
       .then(d => {
         if (d.error) { toast('反推失败：' + d.error); return; }
         const tags = d.tags || [];
