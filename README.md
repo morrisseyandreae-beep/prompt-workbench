@@ -1,4 +1,4 @@
-# 提示词工作台 · 个人修改版
+# 提示词工作台
 
 基于 [Overstar66/prompt-workbench](https://github.com/Overstar66/prompt-workbench) 修改，仅作个人使用，与原仓库无隶属关系。
 
@@ -8,7 +8,7 @@
 
 **Anima 模型兼容**
 
-- 适配 Anima-Turbo v1.0（CircleStone Labs，Cosmos-Predict2-2B 微调），作为独立分支置于结果区芯片首位。
+- 适配 Anima 系列模型，作为独立分支置于结果区芯片首位。
 - 按官方标签序输出：质量前缀 `masterpiece, best quality, score_7` → 人数 → 角色 → 场景。
 - 按 Anima 写法处理标签：小写、下划线换空格（`score_*` 除外），权重上限 2.5。
 - 独立正负向预设，不与 WAI / Pony 互串；NSFW 开关决定追加 `explicit` 还是 `safe`。
@@ -38,11 +38,7 @@
 
 ## 修复
 
-- 画风库头尾固定、正文滚动，关闭按钮不再随内容滚走；支持点灰底与 Esc 关闭。
-- 标签库搜索框改单行块布局，修掉可编辑 div 的光标错位。
-- 角色内标签补移除按钮，权重加减按钮放大到可点。
-- 模型开关状态持久化，刷新后按上次勾选恢复。
-- 图反推期间改为常驻提示，拖图区加忙碌态，不再误以为卡住。
+修复若干已知 bug（画风库、标签库、已选区拖拽、模型开关、图反推）。
 
 ## 其他
 
@@ -61,6 +57,6 @@ python app.py
 
 ## 说明
 
-安装向导、API 配置、词库字段、NSFW 分级等完整文档见上游仓库。
+更详细的教程见上游仓库：<https://github.com/Overstar66/prompt-workbench>
 
 许可证沿用上游 MIT，详见 [LICENSE](LICENSE)。
