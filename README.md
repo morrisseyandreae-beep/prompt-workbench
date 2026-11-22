@@ -4,6 +4,46 @@
 
 上游能力（图反推、AI 扩写、词库点选、MOSS / WAI / Pony 输出）全部保留，以下为在此基础上新增与修复的内容。
 
+## 快速开始使用
+
+**1 克隆仓库**
+
+```bash
+git clone https://github.com/morrisseyandreae-beep/prompt-workbench.git
+cd prompt-workbench
+```
+
+**2 安装依赖**
+
+```bash
+pip install onnxruntime pillow numpy
+```
+
+只有图反推用得到，只写提示词可以跳过。
+
+**3 启动**
+
+```bash
+python app.py
+```
+
+Windows 也可以直接双击 `启动工作台.bat`，然后打开 <http://127.0.0.1:10086>。
+
+**4 配置 WD14 模型（可选，图反推需要）**
+
+模型和同名 `.csv` 放到 `wd14_mod.py` 顶部常量指向的目录；放在别处就用环境变量指定：
+
+```bash
+set WD14_MODEL=D:\你的路径\wd-v1-4-moat-tagger-v2.onnx
+set WD14_TAGS=D:\你的路径\wd-v1-4-moat-tagger-v2.csv
+```
+
+**5 开始用**
+
+- 输入：拖一张图反推，或在左栏写几句中文点「AI 扩写」，也可以直接从标签库点选。
+- 整理：标签进「已选」后可以拖动排序、加减权重，也可以拖进角色框绑定到具体角色。
+- 出结果：点顶栏「生成结果」拿到各模型的正负向；打开「自动生成」后，改一次标签就自动重出。
+
 ## 新增
 
 **Anima 模型兼容**
@@ -53,17 +93,6 @@
 ## 其他
 
 - 本地端口固定 `10086`（上游 `8901`），启动脚本已同步。
-
-## 运行
-
-```bash
-pip install onnxruntime pillow numpy   # 仅图反推需要
-python app.py
-```
-
-打开 <http://127.0.0.1:10086>；Windows 可直接双击 `启动工作台.bat`。
-
-图反推需自备 WD14 模型，路径见 `wd14_mod.py` 顶部常量，可用环境变量 `WD14_MODEL` / `WD14_TAGS` 覆盖。
 
 ## 说明
 
