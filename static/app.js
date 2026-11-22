@@ -119,7 +119,7 @@
       const NS = 'http://www.w3.org/2000/svg', TOP_Y = 24;
       STARS.forEach(([x, y, size, alpha], i) => {
         const dist = Math.max(70, y - TOP_Y);
-        const dur = Math.min(.95, Math.max(.5, dist / 230));
+        const dur = Math.min(1.7, Math.max(.9, dist / 135));
         const outer = document.createElementNS(NS, 'g');
         outer.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
         const inner = document.createElementNS(NS, 'g');
