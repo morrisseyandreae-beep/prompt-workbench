@@ -1218,7 +1218,7 @@
     const gr = d.querySelector('#guideReset');
     if (gr) gr.onclick = () => {
       localStorage.removeItem('pane');
-      ['.lib', '.mid', '.rbot', '.tools'].forEach(sel => { const el = document.querySelector(sel); if (el) el.style.flex = ''; });
+      ['.libcol', '.mid', '.rbot', '.tools', '#nlCard'].forEach(sel => { const el = document.querySelector(sel); if (el) el.style.flex = ''; });
       toast('面板尺寸已重置');
     };
     // 徽章：优先用已加载词库；未加载完则异步补数据
@@ -1278,7 +1278,8 @@
       const maxSide = Math.max(240, W * 0.40);
       const lib = Math.min(p.lib || 0, maxSide);
       const mid = Math.min(p.mid || 0, maxSide);
-      if (lib) $('.lib').style.flex = '0 0 ' + lib + 'px';
+      if (lib) $('.libcol').style.flex = '0 0 ' + lib + 'px';
+      if (p.nl) $('#nlCard').style.flex = '0 0 ' + Math.min(Math.max(86, p.nl), H * 0.55) + 'px';
       if (mid) $('.mid').style.flex = '0 0 ' + mid + 'px';
       if (p.bottom) $('.rbot').style.flex = '0 0 ' + Math.min(p.bottom, H * 0.55) + 'px';
       // 底部两栏按 2:1 比例（忽略旧像素值，避免草稿被挤成一条）
@@ -1300,7 +1301,7 @@
         const parent = a.parentElement;
         const totalW = parent.getBoundingClientRect().width;
         const isRightCol = b.classList.contains('right');
-        const isMidCol = b.classList.contains('mid') || b.classList.contains('lib');
+        const isMidCol = b.classList.contains('mid') || b.classList.contains('libcol');
         const x0 = ev.clientX;
         const aw = a.getBoundingClientRect().width;
         const bw = b.getBoundingClientRect().width;
@@ -1327,7 +1328,7 @@
           document.removeEventListener('mousemove', move);
           document.removeEventListener('mouseup', up);
           const o = LS.get('pane', {});
-          const keyOf = el => el.classList.contains('lib') ? 'lib'
+          const keyOf = el => el.classList.contains('libcol') ? 'lib'
             : el.classList.contains('mid') ? 'mid'
             : el.classList.contains('draft') ? 'draft'
             : el.classList.contains('tools') ? 'tools' : '';
@@ -1341,6 +1342,25 @@
       };
     });
     document.querySelectorAll('.grip-h').forEach(g => {
+      if (g.id === 'gripNL') {
+        g.onmousedown = ev => {
+          ev.preventDefault();
+          const card = $('#nlCard'), col = card.parentElement;
+          const y0 = ev.clientY, h0 = card.getBoundingClientRect().height;
+          const move = e => {
+            const h = Math.max(86, Math.min(col.getBoundingClientRect().height - 160, h0 + (e.clientY - y0)));
+            card.style.flex = '0 0 ' + Math.round(h) + 'px';
+          };
+          const up = () => {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+            const o = LS.get('pane', {}); o.nl = Math.round(card.getBoundingClientRect().height); LS.set('pane', o);
+          };
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', up);
+        };
+        return;
+      }
       g.onmousedown = ev => {
         ev.preventDefault();
         const bot = $('.rbot');

@@ -41,7 +41,9 @@
   main{flex:1;display:flex;gap:8px;padding:8px 10px;min-height:0}
   .card{background:#fff;border:1px solid #e9f0fa;border-radius:18px;box-shadow:0 8px 26px rgba(76,139,245,.06);
     display:flex;flex-direction:column;min-height:0;overflow:hidden}
-  .lib{flex:0 0 34%}
+  .libcol{flex:0 0 34%;display:flex;flex-direction:column;min-width:0;min-height:0}
+  .nlcard{flex:0 0 118px;min-height:86px}
+  .libcard{flex:1 1 0;min-height:0}
   .right{flex:1 1 0;display:flex;flex-direction:column;gap:8px;min-height:0;min-width:320px}
   .rtop{flex:1;display:flex;gap:8px;min-height:0}
   .mid{flex:0 0 38%}
@@ -59,12 +61,13 @@
   .body::-webkit-scrollbar,.taglist::-webkit-scrollbar{width:8px}
   .body::-webkit-scrollbar-thumb,.taglist::-webkit-scrollbar-thumb{background:#e2ebf8;border-radius:8px}
 
-  .lib .body{display:flex;flex-direction:column;overflow:hidden}
-  .nl{border:1px solid #e9f0fa;border-radius:14px;padding:10px;margin-bottom:10px;background:#fcfdff;flex:none}
-  .nl textarea{width:100%;height:88px;resize:none;border:1px solid #e4ecf9;border-radius:11px;padding:10px;
-    font:13px/1.7 inherit;color:#31415c;background:#fff;outline:none}
-  .nl textarea:focus{border-color:#bcd7ff;box-shadow:0 0 0 3px rgba(76,139,245,.08)}
-  .nlrow{display:flex;align-items:center;gap:8px;margin-top:9px}
+  .libcard .body{display:flex;flex-direction:column;overflow:hidden}
+  .nlcard .hd{height:30px;font-size:12.5px}
+  .nlb{display:flex;flex-direction:column;padding:8px 10px}
+  .nlb textarea{flex:1;min-height:0;width:100%;resize:none;border:1px solid #e4ecf9;border-radius:11px;padding:8px 10px;
+    font:13px/1.65 inherit;color:#31415c;background:#fff;outline:none}
+  .nlb textarea:focus{border-color:#bcd7ff;box-shadow:0 0 0 3px rgba(76,139,245,.08)}
+  .nlrow{display:flex;align-items:center;gap:8px;flex:none}
   .row2{display:flex;gap:8px;margin-bottom:10px;flex:none}
   .drop{flex:0 0 96px;border:1.5px dashed #cfdff5;border-radius:13px;color:#9db0c8;font-size:11.5px;
     display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4;background:#fbfdff;cursor:pointer}
@@ -167,7 +170,6 @@
 
   #nl,#draft{color:#111 !important;font-weight:500}
   #nl::placeholder{color:#b6c3d6;font-weight:400}
-  .nl textarea{color:#111}
 
   /* 结果区头部：文字不折行，标签多了自动换行，不挤压 */
   .hd{white-space:nowrap;flex-wrap:wrap;height:auto;min-height:44px;padding-top:6px;padding-bottom:6px;row-gap:6px}
@@ -194,17 +196,19 @@
 </header>
 
 <main>
-  <section class="card lib">
+  <div class="libcol">
+  <section class="card nlcard" id="nlCard">
+    <div class="hd">扩写<span class="r"><button class="btn sm" id="btnExpand">AI 扩写</button></span></div>
+    <div class="body nlb">
+      <textarea id="nl" placeholder="例：2个角色 初音未来 洛天依&#10;初音未来：蓝色长双马尾，青色眼睛，穿白色连衣裙，站在窗边，微笑&#10;场景：教室，午后阳光斜照进来，桌面有书和笔"></textarea>
+    </div>
+  </section>
+
+  <div class="grip-h" id="gripNL" title="拖动调整扩写区高度"></div>
+
+  <section class="card libcard">
     <div class="hd">标签库 <span class="sub" id="libCount">加载中…</span><span class="r" id="btnReset">重置筛选</span></div>
     <div class="body">
-      <div class="nl">
-        <textarea id="nl" placeholder="例：2个角色 初音未来 洛天依&#10;初音未来：蓝色长双马尾，青色眼睛，穿白色连衣裙，站在窗边，微笑&#10;洛天依：灰色短发，红棕色眼睛，穿校服，坐在课桌旁，安静看书&#10;场景：教室，午后阳光斜照进来，桌面有书和笔"></textarea>
-        <div class="nlrow">
-          <div class="sp"></div>
-          <button class="btn" id="btnExpand">AI 扩写</button>
-        </div>
-      </div>
-
       <div class="row2">
         <div class="drop" id="dropImg">点此选图反推<br>或拖图</div>
         <div class="search" id="searchBox">🔍 搜索：蓝发 / long hair / 女仆 / 制服</div>
@@ -224,6 +228,7 @@
       <div class="taglist" id="tagList"></div>
     </div>
   </section>
+  </div>
 
   <div class="grip-v"></div>
 
@@ -261,6 +266,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122anima5"></script>
+<script src="app.js?v=20261122nlcard2"></script>
 </body>
 </html>
