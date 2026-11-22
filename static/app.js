@@ -96,6 +96,57 @@
 
   const api = (p, b) => fetch(p, { method: b === undefined ? 'GET' : 'POST', headers: { 'content-type': 'application/json' }, body: b && JSON.stringify(b) }).then(r => r.json());
 
+  /* ===================== 日夜模式 ===================== */
+  let THEME = 'light';
+  const STARS = [[150,116,20,.95],[108,88,9,.55],[96,170,8,.5],[188,74,7,.45],[215,142,16,.9],
+    [176,207,8,.55],[250,184,8,.5],[262,100,7,.45],[300,150,12,.8],[286,216,7,.45],
+    [330,94,6,.4],[340,198,9,.6],[120,142,6,.4],[232,234,6,.38],[318,238,6,.34]];
+
+  function applyTheme() {
+    document.documentElement.classList.toggle('dark', THEME === 'dark');
+    const b = $('#btnTheme');
+    if (!b) return;
+    const day = THEME !== 'dark';
+    b.classList.toggle('is-day', day);
+    b.setAttribute('aria-checked', day ? 'true' : 'false');
+  }
+
+  function initTheme() {
+    const b = $('#btnTheme');
+    if (!b) return;
+    const g = b.querySelector('.stars');
+    if (g && !g.childNodes.length) {
+      const NS = 'http://www.w3.org/2000/svg', TOP_Y = 24;
+      STARS.forEach(([x, y, size, alpha], i) => {
+        const dist = Math.max(70, y - TOP_Y);
+        const dur = Math.min(.95, Math.max(.5, dist / 230));
+        const outer = document.createElementNS(NS, 'g');
+        outer.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+        const inner = document.createElementNS(NS, 'g');
+        inner.setAttribute('class', 'star');
+        inner.style.setProperty('--o', alpha);
+        inner.style.setProperty('--ty', (-dist) + 'px');
+        inner.style.transitionProperty = 'transform, opacity';
+        inner.style.transitionDuration = dur.toFixed(2) + 's, ' + (dur * 0.55).toFixed(2) + 's';
+        inner.style.transitionTimingFunction = 'cubic-bezier(.22,.68,.28,1), ease-out';
+        inner.style.transitionDelay = (i * 0.018).toFixed(3) + 's';
+        const use = document.createElementNS(NS, 'use');
+        use.setAttribute('href', '#spark');
+        use.setAttribute('transform', 'scale(' + size + ')');
+        use.setAttribute('fill', '#fff');
+        inner.appendChild(use);
+        outer.appendChild(inner);
+        g.appendChild(outer);
+      });
+    }
+    applyTheme();
+    b.onclick = () => {
+      THEME = THEME === 'dark' ? 'light' : 'dark';
+      applyTheme();
+      saveSettings();
+    };
+  }
+
   /* ===================== 通用浮层（替代原生 prompt） ===================== */
   /* 与「⚙ API 配置」同款：白底圆角卡片 + 遮罩，点遮罩 / Esc 关闭。
      fields: [{key,label,value,placeholder,type:'text'|'password'|'select',options:[{value,label}]}]
@@ -108,23 +159,22 @@
     const fields = opt.fields || [];
     const d = document.createElement('div');
     if (opt.id) d.id = opt.id;
-    d.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999;background:rgba(20,30,50,.35)';
+    d.className = 'dlgmask';
     const ctl = f => {
-      const st = 'width:100%;height:34px;border:1px solid #dbe6f6;border-radius:9px;padding:0 10px;font-size:13px;background:#fff';
       if (f.type === 'select') {
-        return `<select data-k="${esc(f.key)}" style="${st};cursor:pointer">` +
+        return `<select class="fi" data-k="${esc(f.key)}" style="cursor:pointer">` +
           (f.options || []).map(o => `<option value="${esc(o.value)}"${o.value === f.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('') +
           '</select>';
       }
-      return `<input data-k="${esc(f.key)}"${f.type === 'password' ? ' type="password"' : ''} value="${esc(f.value == null ? '' : f.value)}"` +
-        ` placeholder="${esc(f.placeholder || '')}" style="${st}">`;
+      return `<input class="fi" data-k="${esc(f.key)}"${f.type === 'password' ? ' type="password"' : ''} value="${esc(f.value == null ? '' : f.value)}"` +
+        ` placeholder="${esc(f.placeholder || '')}">`;
     };
-    d.innerHTML = `<div style="width:${opt.width || 420}px;max-height:86vh;overflow:auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-      <div style="font-weight:700;font-size:15px;margin-bottom:14px">${esc(opt.title || '')}</div>
-      ${fields.map(f => `<div style="font-size:12px;color:#5a6c85">${esc(f.label)}</div>
+    d.innerHTML = `<div class="dlg" style="width:${opt.width || 420}px">
+      <div class="dlg-t">${esc(opt.title || '')}</div>
+      ${fields.map(f => `<div class="dlg-l">${esc(f.label)}</div>
       ${ctl(f)}
-      <div style="height:10px"></div>`).join('')}
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      <div class="dlg-gap"></div>`).join('')}
+      <div class="dlg-ft">
         <button class="btn" data-cancel="1">取消</button>
         <button class="btn primary" data-ok="1">${esc(opt.okText || '确定')}</button>
       </div></div>`;
@@ -1447,6 +1497,8 @@
     if (c.polishMode && $('#selPolish')) $('#selPolish').value = c.polishMode;
     if (c.nsfw !== undefined) S.nsfw = !!c.nsfw;
     if (c.favTop !== undefined) S.favTop = !!c.favTop;
+    THEME = c.theme === 'dark' ? 'dark' : 'light';
+    applyTheme();
     TR_MODE = c.trans === 'tokens' ? 'tokens'
       : (c.trans === 'sentence' || c.trans === true) ? 'sentence' : 'off';
     renderTrCtl();
@@ -1461,6 +1513,7 @@
       nsfw: S.nsfw,
       favTop: S.favTop,
       trans: TR_MODE,
+      theme: THEME,
     });
   }
   function bindSettings() {
@@ -1531,7 +1584,7 @@
       });
     });
 
-    loadSettings(); bindSettings();
+    loadSettings(); initTheme(); bindSettings();
     initResize(); initScroll(); initReverse();
     renderChips(); renderHist(); renderSel();
   }
