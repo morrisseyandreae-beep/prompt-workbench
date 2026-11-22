@@ -300,6 +300,34 @@
     background:#fff;color:#2b3852;font-family:inherit}
   .fi:focus{outline:none;border-color:#bcd7ff;box-shadow:0 0 0 3px rgba(76,139,245,.1)}
 
+  /* ===== 画风库弹层：头部固定，正文滚动，点灰底 / Esc 可关 ===== */
+  .smask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999;
+    background:rgba(20,30,50,.45)}
+  .spanel{width:760px;max-width:92vw;max-height:84vh;display:flex;flex-direction:column;
+    background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+  .shead{flex:none;display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid #eef4fc;font-size:15px}
+  .shead .sx{margin-left:auto;color:#b6c3d6;cursor:pointer;font-size:14px;padding:1px 7px;border-radius:8px;transition:.15s}
+  .shead .sx:hover{background:#fdeef4;color:#f2608f}
+  .sbody{flex:1;min-height:0;overflow:auto;padding:16px 20px}
+  .sbody::-webkit-scrollbar{width:8px}
+  .sbody::-webkit-scrollbar-thumb{background:#e2ebf8;border-radius:8px}
+  .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:12px;color:#8fa3bd}
+  .scard{cursor:pointer;border:1px solid #eef4fc;border-radius:12px;overflow:hidden;background:#fbfdff;transition:.15s}
+  .scard:hover{border-color:#bcd7ff;box-shadow:0 6px 16px rgba(76,139,245,.1)}
+  .scard .im{aspect-ratio:1/1;background:#f2f6fd center/contain no-repeat}
+  .scard .nm{padding:6px 8px;color:#41526b;font-weight:600}
+  .scard .tg{padding:0 8px 7px;color:#9db0c8;font-size:11px}
+  .dark .spanel{background:#161c25;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .dark .shead{border-bottom-color:#232b36;color:#dbe4f0}
+  .dark .shead .sx{color:#6b7889}
+  .dark .shead .sx:hover{background:#2a1a22;color:#f2608f}
+  .dark .sbody::-webkit-scrollbar-thumb{background:#2b3442}
+  .dark .sgrid{color:#7d8ba0}
+  .dark .scard{background:#1a212b;border-color:#2a3341}
+  .dark .scard .im{background-color:#121821}
+  .dark .scard .nm{color:#dbe4f0}
+  .dark .scard .tg{color:#7d8ba0}
+
   /* ===== 黑夜模式 ===== */
   .dark body{color:#c9d3e1;background:
       radial-gradient(900px 520px at 2% -8%, rgba(96,64,120,.22), transparent 62%),
@@ -633,6 +661,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122dragback4"></script>
+<script src="app.js?v=20261122stylefix"></script>
 </body>
 </html>

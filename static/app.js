@@ -1409,21 +1409,27 @@
     if ($('#styleDlg')) { $('#styleDlg').style.display = 'flex'; return; }
     const d = document.createElement('div');
     d.id = 'styleDlg';
-    d.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999;background:rgba(20,30,50,.45)';
-    d.innerHTML = '<div style="width:760px;max-height:84vh;overflow:auto;background:#fff;border-radius:18px;padding:18px 20px">' +
-      '<div style="display:flex;align-items:center;margin-bottom:12px"><b style="font-size:15px">🎨 画风库</b>' +
-      '<span style="margin-left:auto;color:#b6c3d6;cursor:pointer" id="styleX">✕</span></div>' +
-      '<div id="styleGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:12px;color:#8fa3bd">加载中…</div></div>';
+    d.className = 'smask';
+    d.innerHTML = `<div class="spanel" role="dialog" aria-label="画风库">
+      <div class="shead"><b>🎨 画风库</b><span class="sx" id="styleX" title="关闭">✕</span></div>
+      <div class="sbody"><div id="styleGrid" class="sgrid">加载中…</div></div>
+    </div>`;
     document.body.appendChild(d);
-    d.querySelector('#styleX').onclick = () => d.remove();
+
+    const onKey = ev => { if (ev.key === 'Escape') close(); };
+    function close() { d.remove(); document.removeEventListener('keydown', onKey); }
+    d.querySelector('#styleX').onclick = close;
+    d.onclick = ev => { if (ev.target === d) close(); };   // 点灰底退出
+    document.addEventListener('keydown', onKey);
+
     try {
       const r = await api('/api/styles');
       const list = r.styles || [];
       d.querySelector('#styleGrid').innerHTML = list.map((it, i) => `
-        <div data-si="${i}" style="cursor:pointer;border:1px solid #eef4fc;border-radius:12px;overflow:hidden;background:#fbfdff">
-          <div style="aspect-ratio:1/1;background:#f2f6fd center/contain no-repeat url('${String(it.img).replace(/'/g, '%27')}')"></div>
-          <div style="padding:6px 8px;color:#41526b;font-weight:600">${esc(it.name)}</div>
-          <div style="padding:0 8px 7px;color:#9db0c8;font-size:11px">${esc(it.tag || '')}</div>
+        <div class="scard" data-si="${i}">
+          <div class="im" style="background-image:url('${String(it.img).replace(/'/g, '%27')}')"></div>
+          <div class="nm">${esc(it.name)}</div>
+          <div class="tg">${esc(it.tag || '')}</div>
         </div>`).join('');
       d.querySelectorAll('[data-si]').forEach(el => el.onclick = () => {
         const it = list[+el.dataset.si];
@@ -1431,7 +1437,7 @@
           S.global.push({ zh: it.name, en: it.tag, w: 1 });
           renderSel(); toast('已加入画风：' + it.name);
         }
-        d.remove();
+        close();
       });
     } catch (e) {
       d.querySelector('#styleGrid').textContent = '加载失败：' + e.message;
