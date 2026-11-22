@@ -691,9 +691,17 @@
         toGlobal(e.dataTransfer);
       };
     }
-    body.ondragover = e => { if (!e.target.closest('[data-char]')) e.preventDefault(); };
+    /* 面板空白处也能投到全局，所以高亮也得铺满整块，别只亮下面那条 */
+    const clearDrop = () => { body.classList.remove('drop-on'); if (gz) gz.classList.remove('drop-on'); };
+    body.ondragover = e => {
+      if (e.target.closest('[data-char]')) { clearDrop(); return; }
+      e.preventDefault();
+      body.classList.add('drop-on');
+    };
+    body.ondragleave = e => { if (!body.contains(e.relatedTarget)) clearDrop(); };
     body.ondrop = e => {
-      if (e.target.closest('[data-char]') || e.target.closest('.gsec')) return;
+      clearDrop();
+      if (e.target.closest('[data-char]')) return;
       e.preventDefault();
       toGlobal(e.dataTransfer);
     };
