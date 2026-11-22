@@ -571,9 +571,43 @@
     clearDropHL();
     if (el) { el.classList.add('dropon'); DROP_HL = el; }
   }
-  /* 拖拽在任何地方结束（含中途取消、松在面板外）都要把高亮收掉 */
-  document.addEventListener('dragend', clearDropHL);
-  document.addEventListener('drop', clearDropHL, true);
+  /* 拖拽在任何地方结束（含中途取消、松在面板外）都要把高亮收掉。
+     DROP_LOCK：本次已成功投放，dragend 时别把接力过去的高亮又清掉。 */
+  let DROP_LOCK = false;
+  document.addEventListener('dragend', () => {
+    if (DROP_LOCK) { DROP_LOCK = false; return; }
+    clearDropHL();
+  });
+  /* 松手后重渲染会换掉 DOM，把高亮接到新落点那张卡上，等滑行动画走完再淡出，
+     否则高亮会在松手瞬间消失一下，看着像闪 */
+  function keepDropHL(sel, ms) {
+    const el = document.querySelector('#selBody ' + sel);
+    if (!el) return;
+    el.classList.add('dropon');
+    DROP_HL = el; DROP_LOCK = true;
+    setTimeout(() => { if (DROP_HL === el) clearDropHL(); }, ms || 240);
+  }
+  /* 换序落位动画：记录旧坐标 → 重排后用 WAAPI 从旧位置滑到新位置。
+     只在拖拽换序这一次渲染里跑（SEL_ANIM），点到/加减权重不触发。 */
+  let SEL_ANIM = false;
+  const snapSel = root => {
+    const m = new Map();
+    root.querySelectorAll('[data-k]').forEach(el => m.set(el.dataset.k, el.getBoundingClientRect()));
+    return m;
+  };
+  function playFlip(root, prev) {
+    root.querySelectorAll('[data-k]').forEach(el => {
+      const a = prev.get(el.dataset.k);
+      if (!a) return;
+      const b = el.getBoundingClientRect();
+      const dx = Math.round(a.left - b.left), dy = Math.round(a.top - b.top);
+      if (!dx && !dy) return;
+      try {
+        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+          { duration: 220, easing: 'cubic-bezier(.2,.7,.3,1)' });
+      } catch (_) { /* 没有 WAAPI 就算了，位置本身已经是对的 */ }
+    });
+  }
   function saveSel() {
     if (!SEL_READY) return;
     try {
@@ -583,6 +617,8 @@
   function renderSel() {
     saveSel();
     const body = $('#selBody');
+    const prev = SEL_ANIM ? snapSel(body) : null;
+    SEL_ANIM = false;
     clearDropHL();          // 每次重渲染都会换掉 DOM，旧引用必须丢掉
     $('#selCount').textContent = S.global.length + S.chars.reduce((n, c) => n + c.tags.length, 0);
     const cf = detectConflicts();
@@ -594,14 +630,14 @@
       S.chars.map((c, i) => `<div class="box" data-char="${i}">
         <div class="n">${esc(c.name)}<span class="x" data-delchar="${i}">×</span></div>
         <div class="tlist">${c.tags.map((t, j) =>
-          `<span class="t" draggable="true" data-tag="${i},${j}">
+          `<span class="t" draggable="true" data-tag="${i},${j}" data-k="c${i}:${esc(t.en)}">
             <span class="tz">${esc(t.zh)}</span>
             <span class="w"><span class="wb" data-w="${i},${j},-1">−</span><b>${t.w.toFixed(1)}</b><span class="wb" data-w="${i},${j},1">+</span></span>
             <span class="del" data-deltag="${i},${j}" title="从她身上移除">×</span></span>`).join('')
           || '<span class="hintdrop">把标签拖进来 = 归给她</span>'}</div></div>`).join('') +
       `<div class="gsec" data-gdrop="1"><div class="gn">全局标签<span class="x" data-clear="1">×</span></div>
         <div class="tgrid" data-gdrop="1">${S.global.map((t, j) =>
-          `<div class="tcard" draggable="true" data-gtag="${j}">
+          `<div class="tcard" draggable="true" data-gtag="${j}" data-k="g:${esc(t.en)}">
             <span class="x" data-gdel="${j}">×</span><span class="s">★</span><span class="zh">${esc(t.zh)}</span>
             <span class="en">${esc(t.en)}</span>
             <div class="row"><span data-gw="${j},-1">−</span><b>${t.w.toFixed(1)}</b><span data-gw="${j},1">+</span></div></div>`).join('')
@@ -703,7 +739,10 @@
         const d = dragInfo(e.dataTransfer);
         window.__dragSel = null;
         clearDropHL();
-        if (d && S.chars[i]) { dropInto(S.chars[i].tags, d, j, false); renderSel(); }
+        if (d && S.chars[i]) {
+          SEL_ANIM = true; dropInto(S.chars[i].tags, d, j, false); renderSel();
+          keepDropHL('[data-tag="' + i + ',' + j + '"]');
+        }
       };
     });
     body.querySelectorAll('[data-gtag]').forEach(el => {
@@ -714,7 +753,10 @@
         const d = dragInfo(e.dataTransfer);
         window.__dragSel = null;
         clearDropHL();
-        if (d) { dropInto(S.global, d, j, true); renderSel(); }
+        if (d) {
+          SEL_ANIM = true; dropInto(S.global, d, j, true); renderSel();
+          keepDropHL('[data-gtag="' + j + '"]');
+        }
       };
     });
     body.querySelectorAll('[data-char]').forEach(box => {
@@ -778,6 +820,7 @@
       e.preventDefault();
       toGlobal(e.dataTransfer);
     };
+    if (prev) playFlip(body, prev);
   }
 
   /* ===================== 结果 ===================== */
