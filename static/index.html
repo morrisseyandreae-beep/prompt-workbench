@@ -207,14 +207,14 @@
   .dnswitch:hover{filter:drop-shadow(0 4px 12px rgba(0,0,0,.22))}
   .dnswitch:active{transform:scale(.97)}
   .dnswitch .switch-svg{display:block;width:100%;height:auto;overflow:visible}
-  .dnswitch .sky-top,.dnswitch .sky-bot,.dnswitch .band-stop{transition:stop-color 1.5s cubic-bezier(.5,.06,.24,1)}
+  .dnswitch .sky-top,.dnswitch .sky-bot,.dnswitch .band-stop{transition:stop-color .85s cubic-bezier(.5,.06,.24,1)}
   .dnswitch .sky-top{stop-color:#0d1421}
   .dnswitch .sky-bot{stop-color:#192131}
   .dnswitch.is-day .sky-top{stop-color:#3f7fbe}
   .dnswitch.is-day .sky-bot{stop-color:#93c4ea}
   .dnswitch .bands{animation:dnDrift 18s ease-in-out infinite}
   @keyframes dnDrift{0%,100%{transform:translate(0,0)}50%{transform:translate(-13px,-5px)}}
-  .dnswitch .band{transition:transform 1.9s cubic-bezier(.5,.06,.24,1)}
+  .dnswitch .band{transition:transform 1.05s cubic-bezier(.5,.06,.24,1)}
   .dnswitch .s1{stop-color:#1a2338}
   .dnswitch .s2{stop-color:#242f47}
   .dnswitch .s3{stop-color:#303d5d}
@@ -231,36 +231,52 @@
   .dnswitch.is-day .b2{transform:translateX(-24px)}
   .dnswitch.is-day .b3{transform:translateX(-14px)}
   .dnswitch.is-day .b4{transform:translateX(-6px)}
-  .dnswitch .clouds{opacity:0;transition:opacity 1.2s cubic-bezier(.35,.1,.6,.9) .15s}
-  .dnswitch.is-day .clouds{opacity:1;transition:opacity .9s cubic-bezier(.3,.7,.3,1) .1s}
-  .dnswitch .cloud{transform:translateY(60px);transition:transform 1.45s cubic-bezier(.52,.04,.22,1)}
+  .dnswitch .clouds{opacity:0;transition:opacity .7s cubic-bezier(.35,.1,.6,.9) .1s}
+  .dnswitch.is-day .clouds{opacity:1;transition:opacity .52s cubic-bezier(.3,.7,.3,1) .06s}
+  .dnswitch .cloud{transform:translateY(60px);transition:transform .82s cubic-bezier(.52,.04,.22,1)}
   .dnswitch .cloud-inner{transform-box:fill-box;transform-origin:50% 100%;
-    transform:scaleY(.74) scaleX(1.04);transition:transform 1.45s cubic-bezier(.52,.04,.22,1)}
+    transform:scaleY(.74) scaleX(1.04);transition:transform .82s cubic-bezier(.52,.04,.22,1)}
   .dnswitch.is-day .cloud{transform:translateY(0)}
-  .dnswitch.is-day .cloud-inner{transform:scaleY(1) scaleX(1);transition:transform 1.3s cubic-bezier(.34,1.6,.5,1)}
+  .dnswitch.is-day .cloud-inner{transform:scaleY(1) scaleX(1);transition:transform .74s cubic-bezier(.34,1.6,.5,1)}
   .dnswitch .fill-light{fill:#cfe4f7}
   .dnswitch .fill-white{fill:#fff}
   .dnswitch .star{transform-box:view-box;transform-origin:0 0;opacity:var(--o,1)}
   .dnswitch.is-day .star{opacity:0;transform:translateY(var(--ty,-140px))}
-  .dnswitch .inner-shadow{transition:opacity 1.5s cubic-bezier(.5,.06,.24,1)}
+  .dnswitch .inner-shadow{transition:opacity .85s cubic-bezier(.5,.06,.24,1)}
   .dnswitch.is-day .inner-shadow{opacity:.62}
-  .dnswitch .knob{transform:translate(412px,150px);transition:transform 1.45s cubic-bezier(.52,.04,.22,1)}
+  .dnswitch .knob{transform:translate(412px,150px);transition:transform .82s cubic-bezier(.52,.04,.22,1)}
   .dnswitch.is-day .knob{transform:translate(148px,150px)}
-  .dnswitch .halo-night,.dnswitch .halo-day{transition:opacity 1.4s ease-out}
+  .dnswitch .halo-night,.dnswitch .halo-day{transition:opacity .8s ease-out}
   .dnswitch.is-day .halo-night{opacity:0}
-  .dnswitch .knob-shadow{transition:opacity 1.5s cubic-bezier(.5,.06,.24,1)}
+  .dnswitch .knob-shadow{transition:opacity .85s cubic-bezier(.5,.06,.24,1)}
   .dnswitch.is-day .knob-shadow{opacity:.4}
-  .dnswitch .face-night{transition:opacity 1.1s cubic-bezier(.45,0,.3,1) .18s}
-  .dnswitch.is-day .face-night{opacity:0;transition-delay:.24s}
-  .dnswitch .crater{transition:fill 1s cubic-bezier(.5,.06,.24,1),transform .82s cubic-bezier(.5,.06,.24,1),opacity .85s cubic-bezier(.45,0,.3,1);
-    transition-delay:0s,0s,.28s}
+  .dnswitch .face-night{transition:opacity .6s cubic-bezier(.45,0,.3,1) .1s}
+  .dnswitch.is-day .face-night{opacity:0;transition-delay:.14s}
+  .dnswitch .crater{transition:fill .58s cubic-bezier(.5,.06,.24,1),transform .82s cubic-bezier(.5,.06,.24,1),opacity .48s cubic-bezier(.45,0,.3,1);
+    transition-delay:0s,0s,.16s}
   .dnswitch .c1{fill:#adc1d5;transform:translate(-16px,8px)}
   .dnswitch .c2{fill:#adc1d5;transform:translate(22px,-24px)}
   .dnswitch .c3{fill:#adc1d5;transform:translate(26px,24px)}
   .dnswitch.is-day .c1{fill:#d9a63d;transform:translate(-12px,2px)}
   .dnswitch.is-day .c2{fill:#d9a63d;transform:translate(24px,-18px)}
   .dnswitch.is-day .c3{fill:#d9a63d;transform:translate(18px,28px)}
-  .dnswitch.is-day .crater{opacity:0;transition-delay:0s,0s,.14s}
+  .dnswitch.is-day .crater{opacity:0;transition-delay:0s,0s,.08s}
+
+  /* 切主题时整页配色渐变（只在切换的瞬间挂 .theming） */
+  html.theming body,html.theming header,html.theming .card,html.theming .hd,html.theming .tag,
+  html.theming .tcard,html.theming .chip,html.theming .act,html.theming .btn,html.theming select,
+  html.theming .search,html.theming .drop,html.theming .out,html.theming .pair,html.theming .tr,
+  html.theming .lbl,html.theming .lbl .r,html.theming .swchip,html.theming .submenu,
+  html.theming .submenu-t,html.theming .submenu-list span,html.theming .box,html.theming .box .n,
+  html.theming .gn,html.theming .t,html.theming .w,html.theming .hist,html.theming .grip-v,
+  html.theming .grip-h,html.theming .nlb textarea,html.theming .mbody textarea,html.theming .seg,
+  html.theming .segbtn,html.theming .trctl,html.theming .dlg,html.theming .fi,html.theming .note,
+  html.theming .steps i,html.theming .logo b,html.theming .tag .zht,html.theming .tag i,
+  html.theming .tcard .zh,html.theming .tcard .en,html.theming .tcard .row,html.theming .tr .tp b,
+  html.theming .tr .tp span,html.theming .tr .th,html.theming .out,html.theming .ok,html.theming .favbtn,
+  html.theming .hist .hx,html.theming .hist .ht,html.theming .guide,html.theming .hd .sub{
+    transition: background-color .7s ease, color .7s ease, border-color .7s ease, fill .7s ease;
+  }
 
   /* ===== 通用浮层 ===== */
   .dlgmask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999;
@@ -606,6 +622,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122dark3"></script>
+<script src="app.js?v=20261122dark4"></script>
 </body>
 </html>

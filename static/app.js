@@ -111,6 +111,18 @@
     b.setAttribute('aria-checked', day ? 'true' : 'false');
   }
 
+  /* 切主题时给根元素挂 .theming 一小会儿，让整页配色渐变，平时的 hover 不受影响 */
+  function setTheme(next) {
+    const root = document.documentElement;
+    root.classList.add('theming');
+    void root.offsetHeight;              // 先让过渡规则生效，再换色，否则可能直接跳变
+    THEME = next;
+    applyTheme();
+    saveSettings();
+    clearTimeout(setTheme._t);
+    setTheme._t = setTimeout(() => root.classList.remove('theming'), 780);
+  }
+
   function initTheme() {
     const b = $('#btnTheme');
     if (!b) return;
@@ -119,7 +131,7 @@
       const NS = 'http://www.w3.org/2000/svg', TOP_Y = 24;
       STARS.forEach(([x, y, size, alpha], i) => {
         const dist = Math.max(70, y - TOP_Y);
-        const dur = Math.min(1.7, Math.max(.9, dist / 135));
+        const dur = Math.min(.95, Math.max(.5, dist / 230));
         const outer = document.createElementNS(NS, 'g');
         outer.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
         const inner = document.createElementNS(NS, 'g');
@@ -140,11 +152,7 @@
       });
     }
     applyTheme();
-    b.onclick = () => {
-      THEME = THEME === 'dark' ? 'light' : 'dark';
-      applyTheme();
-      saveSettings();
-    };
+    b.onclick = () => setTheme(THEME === 'dark' ? 'light' : 'dark');
   }
 
   /* ===================== 通用浮层（替代原生 prompt） ===================== */
