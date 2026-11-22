@@ -684,25 +684,15 @@
       if (d.lib) addTag(d.lib);
     };
     if (gz) {
-      gz.ondragover = e => { e.preventDefault(); gz.classList.add('drop-on'); };
-      gz.ondragleave = () => gz.classList.remove('drop-on');
+      gz.ondragover = e => e.preventDefault();
       gz.ondrop = e => {
         e.preventDefault();
         e.stopPropagation();          // 别再冒泡到面板那层，否则同一份标签会被处理两次
-        gz.classList.remove('drop-on');
         toGlobal(e.dataTransfer);
       };
     }
-    /* 面板空白处也能投到全局，所以高亮也得铺满整块，别只亮下面那条 */
-    const clearDrop = () => { body.classList.remove('drop-on'); if (gz) gz.classList.remove('drop-on'); };
-    body.ondragover = e => {
-      if (e.target.closest('[data-char]')) { clearDrop(); return; }
-      e.preventDefault();
-      body.classList.add('drop-on');
-    };
-    body.ondragleave = e => { if (!body.contains(e.relatedTarget)) clearDrop(); };
+    body.ondragover = e => { if (!e.target.closest('[data-char]')) e.preventDefault(); };
     body.ondrop = e => {
-      clearDrop();
       if (e.target.closest('[data-char]')) return;
       e.preventDefault();
       toGlobal(e.dataTransfer);
