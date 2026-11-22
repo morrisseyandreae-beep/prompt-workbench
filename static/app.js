@@ -560,6 +560,20 @@
   }
 
   let SEL_READY = false;      // boot 恢复完成后才允许写，避免空状态覆盖存档
+  /* 拖动经过时只维护「当前这一个」高亮卡片：逐帧比对引用，变了才增删类，
+     不做 dragenter/dragleave 计数，避免掠过子元素时反复闪 */
+  let DROP_HL = null;
+  function clearDropHL() {
+    if (DROP_HL) { DROP_HL.classList.remove('dropon'); DROP_HL = null; }
+  }
+  function setDropHL(el) {
+    if (DROP_HL === el) return;
+    clearDropHL();
+    if (el) { el.classList.add('dropon'); DROP_HL = el; }
+  }
+  /* 拖拽在任何地方结束（含中途取消、松在面板外）都要把高亮收掉 */
+  document.addEventListener('dragend', clearDropHL);
+  document.addEventListener('drop', clearDropHL, true);
   function saveSel() {
     if (!SEL_READY) return;
     try {
@@ -569,6 +583,7 @@
   function renderSel() {
     saveSel();
     const body = $('#selBody');
+    clearDropHL();          // 每次重渲染都会换掉 DOM，旧引用必须丢掉
     $('#selCount').textContent = S.global.length + S.chars.reduce((n, c) => n + c.tags.length, 0);
     const cf = detectConflicts();
     /* 只在真撞车时提示，平时不占一条横幅 */
@@ -641,6 +656,67 @@
         }
       };
     });
+    /* 标签级投放：拖动经过时落点卡片高亮，松手在该位置交换。
+       同组内 = 两张卡互换位置；跨组/从词库来 = 插入到该卡片前。 */
+    const swapIn = (arr, a, b) => {
+      if (a === b || a < 0 || b < 0 || a >= arr.length || b >= arr.length) return;
+      const t = arr[a]; arr[a] = arr[b]; arr[b] = t;
+    };
+    const libItem = en => {
+      const t = S.lib.find(x => x.en === en);
+      if (!t) return null;
+      if (!S.nsfw && t.nsfw) { toast('NSFW 标签，先开开关'); return null; }
+      return { zh: t.zh, en: t.en, w: 1 };
+    };
+    const dropInto = (list, d, pos, isGlobal) => {
+      if (!list || !d) return;
+      if (d.from === 'c') {
+        const src = S.chars[d.i], t = src && src.tags[d.j];
+        if (!t) return;
+        if (src.tags === list) { swapIn(list, d.j, pos); return; }
+        src.tags.splice(d.j, 1);
+        list.splice(Math.min(pos, list.length), 0, t);
+        return;
+      }
+      if (d.from === 'g') {
+        const t = S.global[d.j];
+        if (!t) return;
+        if (S.global === list) { swapIn(list, d.j, pos); return; }
+        S.global.splice(d.j, 1);
+        list.splice(Math.min(pos, list.length), 0, { zh: t.zh, en: t.en, w: t.w });
+        return;
+      }
+      if (d.lib) {
+        const it = libItem(d.lib);
+        if (!it) return;
+        const has = isGlobal ? S.global.some(x => x.en === it.en)
+                             : S.chars.some(c => c.tags.some(x => x.en === it.en));
+        if (has) { toast('已在已选里'); return; }
+        list.splice(Math.min(pos, list.length), 0, it);
+      }
+    };
+    body.querySelectorAll('[data-tag]').forEach(el => {
+      const [i, j] = el.dataset.tag.split(',').map(Number);
+      el.ondragover = e => { e.preventDefault(); e.stopPropagation(); setDropHL(el); };
+      el.ondrop = e => {
+        e.preventDefault(); e.stopPropagation();
+        const d = dragInfo(e.dataTransfer);
+        window.__dragSel = null;
+        clearDropHL();
+        if (d && S.chars[i]) { dropInto(S.chars[i].tags, d, j, false); renderSel(); }
+      };
+    });
+    body.querySelectorAll('[data-gtag]').forEach(el => {
+      const j = +el.dataset.gtag;
+      el.ondragover = e => { e.preventDefault(); e.stopPropagation(); setDropHL(el); };
+      el.ondrop = e => {
+        e.preventDefault(); e.stopPropagation();
+        const d = dragInfo(e.dataTransfer);
+        window.__dragSel = null;
+        clearDropHL();
+        if (d) { dropInto(S.global, d, j, true); renderSel(); }
+      };
+    });
     body.querySelectorAll('[data-char]').forEach(box => {
       box.ondragover = e => e.preventDefault();
       box.ondrop = e => {
@@ -691,7 +767,12 @@
         toGlobal(e.dataTransfer);
       };
     }
-    body.ondragover = e => { if (!e.target.closest('[data-char]')) e.preventDefault(); };
+    body.ondragover = e => {
+      /* 只在卡片上是高亮；滑到卡片外的空白处立刻撤掉，避免「亮着但不会交换」 */
+      if (!e.target.closest('[data-tag],[data-gtag]')) clearDropHL();
+      if (!e.target.closest('[data-char]')) e.preventDefault();
+    };
+    body.ondragleave = e => { if (!body.contains(e.relatedTarget)) clearDropHL(); };
     body.ondrop = e => {
       if (e.target.closest('[data-char]')) return;
       e.preventDefault();

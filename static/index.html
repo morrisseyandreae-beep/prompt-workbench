@@ -124,7 +124,8 @@
   .box .n .x:hover{color:#f2608f}
   .tlist{display:flex;flex-wrap:wrap;gap:5px}
   .t{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #e6eef9;border-radius:9px;
-    padding:2px 5px 2px 8px;font-size:11.5px;color:#48596f;cursor:grab}
+    padding:2px 5px 2px 8px;font-size:11.5px;color:#48596f;cursor:grab;
+    transition:border-color .1s,background .1s,color .1s,box-shadow .1s}
   .t:hover{border-color:#bcd7ff;color:#2f6fe0}
   .t .tz{white-space:nowrap}
   .w{display:inline-flex;align-items:center;gap:1px;color:#a2b0c3;font-size:10.5px}
@@ -138,7 +139,8 @@
   .gn{display:flex;align-items:center;font-weight:700;font-size:13px;margin-bottom:7px;color:#27364f}
   .gn .x{margin-left:auto;color:#c8d3e2;cursor:pointer;font-weight:400}
   .tgrid{display:flex;flex-wrap:wrap;gap:7px;min-height:30px}
-  .tcard{border:1px solid #e6eef9;border-radius:9px;background:#fff;padding:3px 8px;line-height:1.25;min-width:140px;position:relative;cursor:grab}
+  .tcard{border:1px solid #e6eef9;border-radius:9px;background:#fff;padding:3px 8px;line-height:1.25;min-width:140px;position:relative;cursor:grab;
+    transition:border-color .1s,background .1s,box-shadow .1s}
   .tcard:hover{border-color:#bcd7ff;box-shadow:0 4px 12px rgba(76,139,245,.08)}
   .tcard .x{position:absolute;right:6px;top:2px;color:#c8d3e2;cursor:pointer}
   .tcard .s{color:#f0b429;font-size:10.5px;margin-right:4px}
@@ -146,6 +148,11 @@
   .tcard .en{display:block;font-size:11px;color:#9db0c8;margin-top:0}
   .tcard .row{display:flex;align-items:center;gap:3px;margin-top:2px;color:#98a6bb;font-size:9.5px}
   .tcard .row b{color:#4c8bf5;font-size:11px}
+  /* 拖动经过时，落点卡片高亮（只在目标元素上挂一次，不做逐帧增删，避免闪动） */
+  .dropon{border-color:#4c8bf5 !important;background:#eef5ff;color:#2f6fe0;
+    box-shadow:0 0 0 2px rgba(76,139,245,.32),0 6px 16px rgba(76,139,245,.16)}
+  .dark .dropon{border-color:#6ea0f7 !important;background:#1e2b3d;color:#cfe0ff;
+    box-shadow:0 0 0 2px rgba(110,160,247,.4),0 6px 18px rgba(0,0,0,.45)}
 
   .swchips{display:flex;gap:5px;margin-left:10px}
   .swchip{border:1px solid #e2ebf8;border-radius:999px;background:#f8fbfe;color:#8f9fb5;font-size:11.5px;
