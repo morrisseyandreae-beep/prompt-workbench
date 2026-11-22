@@ -36,6 +36,16 @@
 
 - 已选区拖拽重写：全局区整块可投放、角色标签可拖回全局、高亮范围与实际可投放区一致、不再冒泡重复处理。
 
+## 效果
+
+![](docs/screens/ui-topbar.png)
+
+![](docs/screens/ui-cats.png)
+
+![](docs/screens/ui-taglib.png)
+
+![](docs/screens/ui-result.png)
+
 ## 修复
 
 修复若干已知 bug（画风库、标签库、已选区拖拽、模型开关、图反推）。
