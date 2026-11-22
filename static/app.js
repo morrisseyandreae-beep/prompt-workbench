@@ -674,9 +674,10 @@
       window.__dragSel = null;
       if (!d) return;
       if (d.from === 'c') {
-        const t = S.chars[d.i] && S.chars[d.i].tags[d.j];
-        if (t) S.global.push({ zh: t.zh, en: t.en, w: t.w });
-        if (S.chars[d.i]) S.chars[d.i].tags.splice(d.j, 1);
+        const c = S.chars[d.i], t = c && c.tags[d.j];
+        if (!t) { renderSel(); return; }
+        S.global.push({ zh: t.zh, en: t.en, w: t.w });
+        c.tags.splice(d.j, 1);
         renderSel(); toast('已移到全局');
         return;
       }
@@ -687,6 +688,7 @@
       gz.ondragleave = () => gz.classList.remove('drop-on');
       gz.ondrop = e => {
         e.preventDefault();
+        e.stopPropagation();          // 别再冒泡到面板那层，否则同一份标签会被处理两次
         gz.classList.remove('drop-on');
         toGlobal(e.dataTransfer);
       };
