@@ -75,14 +75,16 @@
     display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4;background:#fbfdff;cursor:pointer}
   .drop:hover{border-color:#9fc4f7;color:#5f8fd6}
   .search{flex:1;display:flex;align-items:center;gap:8px;border:1px solid #e4ecf9;border-radius:13px;
-    padding:0 13px;color:#9db0c8;font-size:12.5px;background:#fff;min-height:44px}
-  .catwrap{display:flex;gap:8px;flex:none;margin-bottom:8px}
-  .catgrid{flex:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;min-width:0}
+    padding:0 13px;color:#9db0c8;font-size:12.5px;background:#fff;min-height:44px;
+    white-space:nowrap;overflow:hidden;min-width:0}
+  /* 分类芯片 + 操作按钮：放不下就换行，芯片按可用宽度自动减列，不再压成单字 */
+  .catwrap{display:flex;flex-wrap:wrap;gap:6px 8px;flex:none;margin-bottom:8px}
+  .catgrid{flex:1 1 190px;display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px;min-width:0}
   .chip{border:1px solid #e2ebf8;border-radius:999px;background:#f8fbfe;color:#46586f;font-size:12px;
-    padding:5px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:.15s}
+    padding:5px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:.15s}
   .chip:hover{border-color:#bcd7ff;color:#2f6fe0}
   .chip.on{background:linear-gradient(135deg,#5a95f7,#3a72d4);border-color:transparent;color:#fff;font-weight:600}
-  .catact{flex:0 0 168px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+  .catact{flex:1 1 168px;display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:5px}
   .act{border:1px solid #e2ebf8;border-radius:999px;background:#f8fbfe;color:#5a6c85;font-size:11.5px;
     padding:5px 3px;text-align:center;white-space:nowrap;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .act:hover{border-color:#bcd7ff;color:#2f6fe0}
@@ -623,6 +625,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122dark4"></script>
+<script src="app.js?v=20261122dark5"></script>
 </body>
 </html>
