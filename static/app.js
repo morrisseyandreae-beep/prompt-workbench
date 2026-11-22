@@ -516,6 +516,18 @@
     renderSel();
   }
 
+  /* 拖拽来源从 dataTransfer 里读，别只靠 window.__dragSel：
+     中途任何一次重渲染都可能把它冲掉，投放就变成没反应 */
+  function dragInfo(dt) {
+    const raw = (dt && dt.getData('text/plain')) || '';
+    if (raw.indexOf('SEL:') === 0) {
+      const p = raw.slice(4).split(':');
+      return p[0] === 'c' ? { from: 'c', i: +p[1], j: +p[2] } : { from: 'g', j: +p[1] };
+    }
+    if (!raw) return window.__dragSel || null;
+    return { lib: raw };
+  }
+
   function delDrag() {
     const p = window.__dragSel;
     if (!p) return false;
@@ -559,9 +571,10 @@
     const body = $('#selBody');
     $('#selCount').textContent = S.global.length + S.chars.reduce((n, c) => n + c.tags.length, 0);
     const cf = detectConflicts();
+    /* 只在真撞车时提示，平时不占一条横幅 */
     const okHtml = cf.length
       ? `<div class="ok" style="background:#fff5f5;border-color:#ffd9d9;color:#d45050">⚠ 冲突：${cf.join('；')}</div>`
-      : '<div class="ok">✓ 无冲突</div>';
+      : '';
     body.innerHTML = okHtml +
       S.chars.map((c, i) => `<div class="box" data-char="${i}">
         <div class="n">${esc(c.name)}<span class="x" data-delchar="${i}">×</span></div>
@@ -618,49 +631,72 @@
     body.querySelectorAll('[draggable="true"]').forEach(el => {
       el.ondragstart = ev => {
         window.__dragChar = null; window.__dragSub = null;
-        window.__dragSel = el.dataset.tag
-          ? { from: 'c', i: +el.dataset.tag.split(',')[0], j: +el.dataset.tag.split(',')[1] }
-          : { from: 'g', j: +el.dataset.gtag };
-        ev.dataTransfer.setData('text/plain', 'sel');
+        const tk = el.dataset.tag;
+        if (tk) {
+          window.__dragSel = { from: 'c', i: +tk.split(',')[0], j: +tk.split(',')[1] };
+          ev.dataTransfer.setData('text/plain', 'SEL:c:' + tk.split(',').join(':'));
+        } else {
+          window.__dragSel = { from: 'g', j: +el.dataset.gtag };
+          ev.dataTransfer.setData('text/plain', 'SEL:g:' + el.dataset.gtag);
+        }
       };
     });
     body.querySelectorAll('[data-char]').forEach(box => {
       box.ondragover = e => e.preventDefault();
       box.ondrop = e => {
         e.preventDefault();
-        const idx = +box.dataset.char, p = window.__dragSel;
-        if (p) {
-          if (p.from === 'g') { const t = S.global[p.j]; if (t) S.chars[idx].tags.push({ zh: t.zh, en: t.en, w: t.w }); S.global.splice(p.j, 1); }
-          else if (p.i !== idx) { const t = S.chars[p.i].tags[p.j]; S.chars[idx].tags.push(t); S.chars[p.i].tags.splice(p.j, 1); }
-          window.__dragSel = null; renderSel(); return;
+        e.stopPropagation();
+        const idx = +box.dataset.char, d = dragInfo(e.dataTransfer);
+        window.__dragSel = null;
+        if (!d) return;
+        if (d.from === 'g') {
+          const t = S.global[d.j];
+          if (t) S.chars[idx].tags.push({ zh: t.zh, en: t.en, w: t.w });
+          S.global.splice(d.j, 1); renderSel(); return;
         }
-        const en = e.dataTransfer.getData('text/plain');
-        if (en) { const t = S.lib.find(x => x.en === en); if (t) { S.chars[idx].tags.push({ zh: t.zh, en, w: 1 }); renderSel(); } }
+        if (d.from === 'c') {
+          if (d.i !== idx && S.chars[d.i] && S.chars[d.i].tags[d.j]) {
+            S.chars[idx].tags.push(S.chars[d.i].tags[d.j]);
+            S.chars[d.i].tags.splice(d.j, 1);
+          }
+          renderSel(); return;
+        }
+        if (d.lib) {
+          const t = S.lib.find(x => x.en === d.lib);
+          if (t) { S.chars[idx].tags.push({ zh: t.zh, en: d.lib, w: 1 }); renderSel(); }
+        }
       };
     });
-    /* 整块「全局标签」都是投放区：角色身上的标签拖回来要能动，
-       只靠 .tgrid 那条窄带太难命中，标题和留白一起接住 */
+    /* 整块「全局标签」都是投放区，面板空白处也接住：拖回来别再有死角 */
     const gz = body.querySelector('.gsec');
+    const toGlobal = dt => {
+      const d = dragInfo(dt);
+      window.__dragSel = null;
+      if (!d) return;
+      if (d.from === 'c') {
+        const t = S.chars[d.i] && S.chars[d.i].tags[d.j];
+        if (t) S.global.push({ zh: t.zh, en: t.en, w: t.w });
+        if (S.chars[d.i]) S.chars[d.i].tags.splice(d.j, 1);
+        renderSel(); toast('已移到全局');
+        return;
+      }
+      if (d.lib) addTag(d.lib);
+    };
     if (gz) {
       gz.ondragover = e => { e.preventDefault(); gz.classList.add('drop-on'); };
       gz.ondragleave = () => gz.classList.remove('drop-on');
       gz.ondrop = e => {
         e.preventDefault();
         gz.classList.remove('drop-on');
-        const p = window.__dragSel;
-        if (p && p.from === 'c') {
-          const t = S.chars[p.i].tags[p.j];
-          if (t) S.global.push({ zh: t.zh, en: t.en, w: t.w });
-          S.chars[p.i].tags.splice(p.j, 1);
-          window.__dragSel = null; renderSel();
-          toast('已移到全局');
-          return;
-        }
-        if (p && p.from === 'g') { window.__dragSel = null; return; }
-        const en = e.dataTransfer.getData('text/plain');
-        if (en) addTag(en);
+        toGlobal(e.dataTransfer);
       };
     }
+    body.ondragover = e => { if (!e.target.closest('[data-char]')) e.preventDefault(); };
+    body.ondrop = e => {
+      if (e.target.closest('[data-char]') || e.target.closest('.gsec')) return;
+      e.preventDefault();
+      toGlobal(e.dataTransfer);
+    };
   }
 
   /* ===================== 结果 ===================== */
@@ -1595,7 +1631,7 @@
           else { const c = S.chars[p.i]; const t = c && c.tags[p.j]; zh = t ? t.zh : ''; }
         }
         if (!zh) {
-          const en = e.dataTransfer.getData('text/plain');
+          const en = (e.dataTransfer.getData('text/plain') || '').replace(/^SEL:.*$/, '');
           const t = S.lib.find(x => x.en === en);
           zh = t ? t.zh : en;
         }
