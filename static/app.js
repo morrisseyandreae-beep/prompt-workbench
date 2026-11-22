@@ -1480,7 +1480,7 @@
         const bot = $('.rbot');
         const y0 = ev.clientY, h0 = bot.getBoundingClientRect().height;
         const move = e => {
-          const h = Math.max(140, Math.min(innerHeight * .62, h0 - (e.clientY - y0)));
+          const h = Math.max(92, Math.min(innerHeight * .62, h0 - (e.clientY - y0)));
           bot.style.flex = '0 0 ' + h + 'px';
         };
         const up = () => {
