@@ -177,6 +177,14 @@
   .swchips{display:flex;flex-wrap:wrap;gap:5px;margin-left:10px;min-width:0}
   .swchip{flex:0 0 auto;white-space:nowrap}
   #resBody .lbl{white-space:nowrap}
+  .trsw{font-size:11.5px;color:#5a6c85}
+  .trsw input{width:13px;height:13px}
+  /* 译文框：跟在正向/负向提示词下面，逐词模式下按词块换行 */
+  .tr{margin-top:6px;border:1px dashed #e2ebf8;border-radius:10px;background:#fbfdff;padding:7px 10px;
+    font-size:11.5px;line-height:1.75;color:#5a6c85;word-break:break-word}
+  .tr .tp{display:inline-block;margin:0 9px 3px 0}
+  .tr .tp b{color:#2f405c;font-weight:600;margin-right:4px}
+  .tr .tp span{color:#7d8fa8}
 </style>
 </head>
 <body>
@@ -240,7 +248,10 @@
       </div>
       <div class="grip-v"></div>
       <div class="card res">
-        <div class="hd">结果 <span class="swchips" id="secChips"></span><span class="r" id="btnClearRes">清空结果</span></div>
+        <div class="hd">结果 <span class="swchips" id="secChips"></span>
+          <label class="sw trsw" title="调用微软免鉴权翻译，给出整段中文"><input type="checkbox" id="swTrans">翻译</label>
+          <label class="sw trsw" title="按逗号拆开，逐词中英对照"><input type="checkbox" id="swTransTok">逐词</label>
+          <span class="r" id="btnClearRes">清空结果</span></div>
         <div class="body" id="resBody"><div class="note" style="padding:26px;text-align:center">点「生成结果」后显示</div></div>
       </div>
     </div>
@@ -266,6 +277,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122nlcard2"></script>
+<script src="app.js?v=20261122trans"></script>
 </body>
 </html>

@@ -611,6 +611,49 @@
     if (/Krea/.test(k)) return 'krea';
     return 'exp';
   }
+  /* 只给英文提示词挂译文框：中文段落（MOSS / 扩写 / Krea2 负向说明）跳过 */
+  const cjkRatio = t => {
+    const x = String(t || '').trim();
+    if (!x) return 1;
+    return (x.match(/[\u4e00-\u9fa5]/g) || []).length / x.length;
+  };
+  const isEnPrompt = t => { const x = String(t || '').trim(); return !!x && x !== '—' && cjkRatio(x) < 0.2; };
+
+  async function fillTranslations() {
+    document.querySelectorAll('#resBody .tr').forEach(el => el.remove());
+    const sw = $('#swTrans'), swTok = $('#swTransTok');
+    if (!sw || !sw.checked) return;
+    const boxes = [];
+    document.querySelectorAll('#resBody .sec').forEach(sec => {
+      const out = sec.querySelector('.out');
+      if (out && isEnPrompt(out.textContent)) boxes.push(out);
+    });
+    if (!boxes.length) return;
+    const tok = !!(swTok && swTok.checked);
+    boxes.forEach(b => {
+      const d = document.createElement('div');
+      d.className = 'tr';
+      d.textContent = '翻译中…';
+      b.insertAdjacentElement('afterend', d);
+    });
+    try {
+      const d = await api('/api/translate', { texts: boxes.map(b => b.textContent), mode: tok ? 'tokens' : 'sentence' });
+      if (!d || !d.ok) throw new Error((d && d.error) || '翻译不可用');
+      boxes.forEach((b, i) => {
+        const tr = b.nextElementSibling;
+        if (!tr || !tr.classList.contains('tr')) return;
+        if (tok) {
+          tr.innerHTML = (d.pairs[i] || []).map(([en, zh]) =>
+            `<span class="tp"><b>${esc(en)}</b><span>${esc(zh)}</span></span>`).join('');
+        } else {
+          tr.textContent = (d.zh || [])[i] || '（无译文）';
+        }
+      });
+    } catch (e) {
+      document.querySelectorAll('#resBody .tr').forEach(el => { el.textContent = '翻译失败：' + e.message; });
+    }
+  }
+
   function showResult(rows) {
     const body = $('#resBody');
     body.innerHTML = rows.map(([k, v]) => {
@@ -629,6 +672,7 @@
       const exp = body.querySelector('.out[data-k="扩写结果"]');
       if (exp) { $('#draft').value = exp.textContent; toast('已填入草稿'); }
     });
+    fillTranslations();
   }
 
   /* ===================== 外貌 ===================== */
@@ -1143,6 +1187,8 @@
         ${ROW('润色', 'API / 本地 / 模板 / 关，四档')}
         ${ROW('密度', '精简 / 标准 / 复杂，控制标签数量')}
         ${ROW('负向', '完整 / 精简 / 关，控制负向长度')}
+        ${ROW('翻译', '给英文提示词补中文译文，走微软免鉴权接口，不传本地标签库')}
+        ${ROW('逐词', '译文改成按逗号拆的中英对照，方便对词')}
       </div>
       <p class="ghint" style="margin:12px 0 0">「生成结果」一次出 Anima-Turbo / WAI / Pony / Animagine 的正负向、MOSS 中文段落和 Krea2 描述，每块右上角可单独复制；润色只影响 MOSS 中文段落，其余始终是标签串。</p>`;
 
@@ -1391,6 +1437,8 @@
     if (c.polishMode && $('#selPolish')) $('#selPolish').value = c.polishMode;
     if (c.nsfw !== undefined) S.nsfw = !!c.nsfw;
     if (c.favTop !== undefined) S.favTop = !!c.favTop;
+    if ($('#swTrans')) $('#swTrans').checked = !!c.trans;
+    if ($('#swTransTok')) $('#swTransTok').checked = !!c.transTok;
   }
   function saveSettings() {
     LS.set('settings', {
@@ -1401,12 +1449,18 @@
       neg: $('#selNeg').value,
       nsfw: S.nsfw,
       favTop: S.favTop,
+      trans: $('#swTrans') ? $('#swTrans').checked : false,
+      transTok: $('#swTransTok') ? $('#swTransTok').checked : false,
     });
   }
   function bindSettings() {
     ['#swApi', '#swNsfwTop', '#selDensity', '#selNeg', '#selPolish'].forEach(sel => {
       const el = document.querySelector(sel);
       if (el) el.addEventListener('change', saveSettings);
+    });
+    ['#swTrans', '#swTransTok'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.addEventListener('change', () => { saveSettings(); fillTranslations(); });
     });
   }
 

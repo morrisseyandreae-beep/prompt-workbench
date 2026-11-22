@@ -22,6 +22,58 @@ def load_custom_chars():
         return []
 
 
+_TR_CACHE = {}
+_TR_LOCK = threading.Lock()
+_TR_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+          "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0")
+
+
+def ms_translate(texts, to="zh-Hans", src="en"):
+    """微软 Edge 免鉴权翻译。一次最多 40 条，返回与 texts 等长的译文列表。"""
+    out = []
+    for i in range(0, len(texts), 40):
+        chunk = [t[:4000] for t in texts[i:i + 40]]
+        url = "https://edge.microsoft.com/translate/translatetext?to=" + to
+        if src:
+            url += "&from=" + src
+        req = urllib.request.Request(url, data=json.dumps(chunk).encode("utf-8"),
+                                     headers={"User-Agent": _TR_UA, "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read().decode("utf-8"))
+        out += [x["translations"][0]["text"] for x in d]
+    return out
+
+
+def translate_cached(items, to="zh-Hans"):
+    """items 里查缓存，只把没译过的送出去。"""
+    with _TR_LOCK:
+        miss = [t for t in items if t not in _TR_CACHE]
+    miss = list(dict.fromkeys(miss))
+    if miss:
+        got = ms_translate(miss, to=to)
+        with _TR_LOCK:
+            for k, v in zip(miss, got):
+                _TR_CACHE[k] = v
+            if len(_TR_CACHE) > 8000:
+                for k in list(_TR_CACHE)[:3000]:
+                    _TR_CACHE.pop(k, None)
+    with _TR_LOCK:
+        return [_TR_CACHE.get(t, "") for t in items]
+
+
+def split_tokens(text):
+    """按逗号拆标签，去掉 (tag:1.2) 的权重外壳，用于逐词对照。"""
+    out = []
+    for raw in re.split(r"[,，]", text or ""):
+        t = raw.strip()
+        if not t:
+            continue
+        core = re.sub(r"^\((.*):[\d.]+\)$", r"\1", t).strip()
+        if core:
+            out.append((t, core))
+    return out
+
+
 def save_custom_char(rec):
     """追加/更新一个自定义角色（同 zh / 同 en / 同 from 视为同一条），返回总条数。"""
     with _CHARS_LOCK:
@@ -842,6 +894,24 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps({"ok": False, "error": "中文名必填"}, ensure_ascii=False))
             else:
                 self._send(200, json.dumps({"ok": True, "count": save_custom_char(rec)}, ensure_ascii=False))
+        elif p == "/api/translate":
+            try:
+                texts = [str(t) for t in (data.get("texts") or [])][:40]
+                mode = "tokens" if str(data.get("mode") or "") == "tokens" else "sentence"
+                if mode == "tokens":
+                    groups = [split_tokens(t) for t in texts]
+                    flat = [core for g in groups for _, core in g]
+                    zh = translate_cached(flat)
+                    pairs, pos = [], 0
+                    for g in groups:
+                        pairs.append([[orig, zh[pos + i]] for i, (orig, _) in enumerate(g)])
+                        pos += len(g)
+                    res = {"ok": True, "pairs": pairs}
+                else:
+                    res = {"ok": True, "zh": translate_cached(texts)}
+                self._send(200, json.dumps(res, ensure_ascii=False))
+            except Exception as e:
+                self._send(200, json.dumps({"ok": False, "error": str(e)}, ensure_ascii=False))
         elif p == "/api/generate":
             try:
                 if HERE not in __import__("sys").path:
