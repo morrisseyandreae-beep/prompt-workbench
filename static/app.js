@@ -571,13 +571,13 @@
             <span class="w"><span class="wb" data-w="${i},${j},-1">−</span><b>${t.w.toFixed(1)}</b><span class="wb" data-w="${i},${j},1">+</span></span>
             <span class="del" data-deltag="${i},${j}" title="从她身上移除">×</span></span>`).join('')
           || '<span class="hintdrop">把标签拖进来 = 归给她</span>'}</div></div>`).join('') +
-      `<div class="gsec"><div class="gn">全局标签<span class="x" data-clear="1">×</span></div>
+      `<div class="gsec" data-gdrop="1"><div class="gn">全局标签<span class="x" data-clear="1">×</span></div>
         <div class="tgrid" data-gdrop="1">${S.global.map((t, j) =>
           `<div class="tcard" draggable="true" data-gtag="${j}">
             <span class="x" data-gdel="${j}">×</span><span class="s">★</span><span class="zh">${esc(t.zh)}</span>
             <span class="en">${esc(t.en)}</span>
             <div class="row"><span data-gw="${j},-1">−</span><b>${t.w.toFixed(1)}</b><span data-gw="${j},1">+</span></div></div>`).join('')
-          || '<span class="hintdrop">点左侧标签加入，或把标签拖到这</span>'}</div></div>`;
+          || '<span class="hintdrop">点左侧标签加入，或把标签拖到这 = 放到全局</span>'}</div></div>`;
 
     body.querySelectorAll('[data-gw]').forEach(el => el.onclick = () => {
       const [j, d] = el.dataset.gw.split(',').map(Number);
@@ -638,19 +638,29 @@
         if (en) { const t = S.lib.find(x => x.en === en); if (t) { S.chars[idx].tags.push({ zh: t.zh, en, w: 1 }); renderSel(); } }
       };
     });
-    const gd = body.querySelector('[data-gdrop]');
-    gd.ondragover = e => e.preventDefault();
-    gd.ondrop = e => {
-      e.preventDefault();
-      const p = window.__dragSel;
-      if (p && p.from === 'c') {
-        const t = S.chars[p.i].tags[p.j];
-        if (t) S.global.push({ zh: t.zh, en: t.en, w: t.w });
-        S.chars[p.i].tags.splice(p.j, 1); window.__dragSel = null; renderSel(); return;
-      }
-      const en = e.dataTransfer.getData('text/plain');
-      if (en) addTag(en);
-    };
+    /* 整块「全局标签」都是投放区：角色身上的标签拖回来要能动，
+       只靠 .tgrid 那条窄带太难命中，标题和留白一起接住 */
+    const gz = body.querySelector('.gsec');
+    if (gz) {
+      gz.ondragover = e => { e.preventDefault(); gz.classList.add('drop-on'); };
+      gz.ondragleave = () => gz.classList.remove('drop-on');
+      gz.ondrop = e => {
+        e.preventDefault();
+        gz.classList.remove('drop-on');
+        const p = window.__dragSel;
+        if (p && p.from === 'c') {
+          const t = S.chars[p.i].tags[p.j];
+          if (t) S.global.push({ zh: t.zh, en: t.en, w: t.w });
+          S.chars[p.i].tags.splice(p.j, 1);
+          window.__dragSel = null; renderSel();
+          toast('已移到全局');
+          return;
+        }
+        if (p && p.from === 'g') { window.__dragSel = null; return; }
+        const en = e.dataTransfer.getData('text/plain');
+        if (en) addTag(en);
+      };
+    }
   }
 
   /* ===================== 结果 ===================== */
