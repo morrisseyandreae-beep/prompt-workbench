@@ -363,17 +363,6 @@
 <body>
 
 <header>
-  <div class="logo"><i>✦</i> 提示词<b>工作台</b> <i>✦</i></div>
-  <div class="steps"><i>① 反推 / 描述</i><i class="on">② 挑标签</i><i>③ 出结果</i></div>
-  <div class="guide">📖 说明书</div>
-  <div class="sp"></div>
-  <label class="sw"><input type="checkbox" id="swApi" checked><b>API</b></label>
-  <label class="sw"><input type="checkbox" id="swNsfwTop">NSFW模式</label>
-  <select id="selPolish"><option value="api" selected>润色 API</option><option value="local">润色 本地</option><option value="off">润色 关</option><option value="tmpl">润色 模板</option></select>
-  <select id="selDensity"><option value="compact">精简</option><option value="normal" selected>标准</option><option value="complex">复杂</option></select>
-  <select id="selNeg"><option value="full" selected>负向 完整</option><option value="simple">负向 精简</option><option value="off">负向 关</option></select>
-  <button class="btn" id="btnCfg">⚙ API</button>
-  <button class="btn primary" id="btnGen">生成结果</button>
   <button class="dnswitch is-day" id="btnTheme" type="button" role="switch" aria-checked="false" title="切换日间 / 夜间模式" aria-label="切换日间 / 夜间模式">
       <svg class="switch-svg" viewBox="40 40 480 220" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -522,6 +511,17 @@
               fill="none" stroke="rgba(0,0,0,.13)" stroke-width="1.5"/>
       </svg>
     </button>
+  <div class="logo"><i>✦</i> 提示词<b>工作台</b> <i>✦</i></div>
+  <div class="steps"><i>① 反推 / 描述</i><i class="on">② 挑标签</i><i>③ 出结果</i></div>
+  <div class="guide">📖 说明书</div>
+  <div class="sp"></div>
+  <label class="sw"><input type="checkbox" id="swApi" checked><b>API</b></label>
+  <label class="sw"><input type="checkbox" id="swNsfwTop">NSFW模式</label>
+  <select id="selPolish"><option value="api" selected>润色 API</option><option value="local">润色 本地</option><option value="off">润色 关</option><option value="tmpl">润色 模板</option></select>
+  <select id="selDensity"><option value="compact">精简</option><option value="normal" selected>标准</option><option value="complex">复杂</option></select>
+  <select id="selNeg"><option value="full" selected>负向 完整</option><option value="simple">负向 精简</option><option value="off">负向 关</option></select>
+  <button class="btn" id="btnCfg">⚙ API</button>
+  <button class="btn primary" id="btnGen">生成结果</button>
 </header>
 
 <main>
@@ -606,6 +606,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122dark2"></script>
+<script src="app.js?v=20261122dark3"></script>
 </body>
 </html>
