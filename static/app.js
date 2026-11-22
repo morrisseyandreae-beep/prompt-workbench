@@ -32,12 +32,17 @@
   const PAGE = 150;
 
   /* 结果区模型开关的默认值；用户点过的状态存在 localStorage.secState，刷新后恢复 */
-  const SEC_KEYS = ['moss', 'wai', 'pony', 'anima', 'krea', 'exp'];
-  const SEC_DEF = { moss: true, wai: true, pony: true, anima: false, krea: false, exp: true };
+  const SEC_KEYS = ['anima', 'moss', 'wai', 'pony', 'animagine', 'krea', 'exp'];
+  const SEC_DEF = { anima: true, moss: true, wai: true, pony: true, animagine: false, krea: false, exp: true };
   function loadSec() {
     const raw = LS.get('secState', null), out = Object.assign({}, SEC_DEF);
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
       SEC_KEYS.forEach(k => { if (typeof raw[k] === 'boolean') out[k] = raw[k]; });
+      /* 旧版本里 anima 这个 key 指的是 Animagine，迁一次别再让老值串到新模型上 */
+      if (typeof raw.anima === 'boolean' && typeof raw.animagine !== 'boolean') {
+        out.animagine = raw.anima;
+        out.anima = SEC_DEF.anima;
+      }
     }
     return out;
   }
@@ -581,7 +586,8 @@
 
   /* ===================== 结果 ===================== */
   function renderChips() {
-    const map = [['moss', 'MOSS'], ['wai', 'WAI'], ['pony', 'Pony'], ['anima', 'Animagine'], ['krea', 'Krea2'], ['exp', '扩写结果']];
+    const map = [['anima', 'Anima-Turbo'], ['moss', 'MOSS'], ['wai', 'WAI'], ['pony', 'Pony'],
+                 ['animagine', 'Animagine'], ['krea', 'Krea2'], ['exp', '扩写结果']];
     $('#secChips').innerHTML = map.map(([k, n]) =>
       `<span class="swchip ${S.sec[k] ? 'on' : ''}" data-k="${k}">${n}</span>`).join('');
     $('#secChips').querySelectorAll('.swchip').forEach(el => el.onclick = () => {
@@ -596,10 +602,19 @@
       el.style.display = S.sec[el.dataset.sec] ? '' : 'none';
     });
   }
+  function secOf(k) {
+    if (/MOSS/.test(k)) return 'moss';
+    if (/WAI/.test(k)) return 'wai';
+    if (/Pony/.test(k)) return 'pony';
+    if (/Animagine/.test(k)) return 'animagine';
+    if (/Anima/.test(k)) return 'anima';
+    if (/Krea/.test(k)) return 'krea';
+    return 'exp';
+  }
   function showResult(rows) {
     const body = $('#resBody');
     body.innerHTML = rows.map(([k, v]) => {
-      const sec = /MOSS/.test(k) ? 'moss' : /WAI/.test(k) ? 'wai' : /Pony/.test(k) ? 'pony' : /Animagine/.test(k) ? 'anima' : /Krea/.test(k) ? 'krea' : 'exp';
+      const sec = secOf(k);
       const fill = sec === 'exp' ? '<u data-fill="1">填入草稿</u>' : '';
       return `<div class="sec" data-sec="${sec}">
         <div class="lbl">${esc(k)}<span class="r">${fill}<u data-copy="${esc(k)}">复制</u></span></div>
@@ -858,16 +873,18 @@
         use: { wai: 1, pony: 1, moss: wantMoss ? 1 : 0 }, only: 'fast',
       });
       showResult(wantMoss ? [
+        ['Anima-Turbo v1.0', d.anima || '—'], ['负向 · Anima-Turbo', d.neg_anima || '—'],
         ['MOSS 中文', d.moss || '—'], ['负向 · MOSS', d.neg_zh || d.neg_moss || '—'],
         ['WAI / NoobAI', d.wai || '—'], ['负向 · WAI', d.neg || '—'],
         ['Pony V6 XL', d.pony || '—'], ['负向 · Pony', d.neg_pony || '—'],
-        ['Animagine XL', d.anima || '—'], ['负向 · Animagine', d.neg_anima || '—'],
+        ['Animagine XL', d.animagine || '—'], ['负向 · Animagine', d.neg_animagine || '—'],
         ['Krea2（自然语言）', d.krea || '—'],
         ['负向 · Krea2', d.neg_krea || '该模型 CFG=1，负向不生效（需把 KSampler cfg 调到 3 以上才起作用）'],
       ] : [
+        ['Anima-Turbo v1.0', d.anima || '—'], ['负向 · Anima-Turbo', d.neg_anima || '—'],
         ['WAI / NoobAI', d.wai || '—'], ['负向 · WAI', d.neg || '—'],
         ['Pony V6 XL', d.pony || '—'], ['负向 · Pony', d.neg_pony || '—'],
-        ['Animagine XL', d.anima || '—'], ['负向 · Animagine', d.neg_anima || '—'],
+        ['Animagine XL', d.animagine || '—'], ['负向 · Animagine', d.neg_animagine || '—'],
         ['Krea2（自然语言）', d.krea || '—'],
         ['负向 · Krea2', d.neg_krea || '该模型 CFG=1，负向不生效（需把 KSampler cfg 调到 3 以上才起作用）'],
       ]);
@@ -1100,8 +1117,8 @@
 
     const P0 = `
       <div class="glead">
-        <div class="glead-t">图反推 → AI 扩写 → 拆标签 → 生成 <b>MOSS / WAI / Pony</b></div>
-        <div class="glead-s">全程本机 127.0.0.1:8901 运行，不联网；只有勾选 API 时，文字才会发给 DeepSeek。</div>
+        <div class="glead-t">图反推 → AI 扩写 → 拆标签 → 生成 <b>Anima-Turbo / MOSS / WAI / Pony</b></div>
+        <div class="glead-s">全程本机 127.0.0.1:10086 运行，不联网；只有勾选 API 时，文字才会发给 DeepSeek。</div>
       </div>
       <div class="gtitle">三条主路径</div>
       <div class="ggrid" style="margin-bottom:12px">
@@ -1116,7 +1133,7 @@
       <p class="ghint">顶部步骤条只是流程提示，点击不会自动跳转。</p>
       <div class="gtitle">核心按钮速查</div>
       <div class="grows">
-        ${ROW('生成结果', '一次出 MOSS + WAI + Pony 及各自负向')}
+        ${ROW('生成结果', '一次出各模型的正向与负向，按「结果」旁的芯片筛选')}
         ${ROW('AI 扩写', '把描述补成标准格式，同时存进历史')}
         ${ROW('拆成标签', '草稿拆成角色与标签，各归各位')}
         ${ROW('生成 MOSS', '只按「已选」出中文段落与负向')}
@@ -1127,7 +1144,7 @@
         ${ROW('密度', '精简 / 标准 / 复杂，控制标签数量')}
         ${ROW('负向', '完整 / 精简 / 关，控制负向长度')}
       </div>
-      <p class="ghint" style="margin:12px 0 0">「生成结果」一次出 6 个区块（三种模型 + 三种负向），每块右上角可单独复制；润色只影响 MOSS 中文段落，WAI / Pony 始终是标签串。</p>`;
+      <p class="ghint" style="margin:12px 0 0">「生成结果」一次出 Anima-Turbo / WAI / Pony / Animagine 的正负向、MOSS 中文段落和 Krea2 描述，每块右上角可单独复制；润色只影响 MOSS 中文段落，其余始终是标签串。</p>`;
 
     const P2 = `
       <div class="gtitle">三个必须知道的开关</div>

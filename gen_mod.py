@@ -4,7 +4,11 @@ import re
 
 QUALITY = "masterpiece, best quality, amazing quality"
 PONY_Q = "score_9, score_8_up, score_7_up, source_anime, rating_explicit"
-ANIMA_Q = "masterpiece, best quality, very aesthetic, absurdres"
+ANIMAGINE_Q = "masterpiece, best quality, very aesthetic, absurdres"
+
+# Anima-Turbo v1.0（CircleStone Labs × Comfy Org，2B 动漫 T2I，Cosmos-Predict2-2B 微调）
+# 官方吃 danbooru 写法：小写、下划线换空格（score_* 例外），画师标签要 @ 前缀，权重需比 SDXL 更高。
+ANIMA_Q = "masterpiece, best quality, score_7"
 
 NEG_WAI = ('extra hands, multiple hands, mutated hands, malformed hands, deformed hands, worst quality, low quality, normal quality, lowres, jpeg artifacts, blurry, bad anatomy, bad hands, missing fingers, extra fingers, extra digits, fewer digits, fused fingers, deformed, disfigured, malformed limbs, extra limbs, missing limbs, long neck, watermark, signature, username, artist name, text, logo, cropped, out of frame, border, censored, mosaic censoring, bar censor')
 NEG_PONY = ("score_4, score_5, score_6, worst quality, low quality, lowres, bad anatomy, bad hands, "
@@ -13,15 +17,20 @@ NEG_PONY = ("score_4, score_5, score_6, worst quality, low quality, lowres, bad 
 NEG_MOSS = ("最差画质，低画质，普通画质，低分辨率，压缩噪点，模糊，错误的人体结构，畸形的手，多余的手指，"
             "缺失的手指，融合的手指，多出的肢体，缺失的肢体，长脖子，水印，签名，用户名，画师名，文字，标志，"
             "被裁切，出框，边框，马赛克，打码，遮挡")
+NEG_ANIMA = ("worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, "
+             "chromatic aberration, bad anatomy, bad hands, extra fingers, missing fingers, watermark, "
+             "signature, text, lowres, cropped")
 
 # 负向「精简」档：只留质量 + 畸形类，去掉冗长列举
 NEG_WAI_SIMPLE = "worst quality, low quality, bad anatomy, bad hands, extra fingers, watermark, text"
 NEG_PONY_SIMPLE = ("score_4, score_5, score_6, worst quality, low quality, bad anatomy, bad hands, "
                    "extra digits, watermark, text")
 NEG_MOSS_SIMPLE = "最差画质，低画质，错误的人体结构，畸形的手，多余的手指，水印，文字"
+NEG_ANIMA_SIMPLE = "worst quality, low quality, score_1, score_2, score_3, bad anatomy, watermark, text"
 
-_NEG_FULL = {"wai": NEG_WAI, "pony": NEG_PONY, "moss": NEG_MOSS}
-_NEG_SIMPLE = {"wai": NEG_WAI_SIMPLE, "pony": NEG_PONY_SIMPLE, "moss": NEG_MOSS_SIMPLE}
+_NEG_FULL = {"wai": NEG_WAI, "pony": NEG_PONY, "moss": NEG_MOSS, "anima": NEG_ANIMA}
+_NEG_SIMPLE = {"wai": NEG_WAI_SIMPLE, "pony": NEG_PONY_SIMPLE, "moss": NEG_MOSS_SIMPLE,
+               "anima": NEG_ANIMA_SIMPLE}
 _LV_OFF = {"off", "none", "no", "0", "false", "关", "关闭", "关掉"}
 _LV_SIMPLE = {"simple", "lite", "light", "short", "精简", "简"}
 
@@ -30,21 +39,25 @@ _NEG_DROP = {
     "censor": {
         "wai": ("censored", "mosaic censoring", "bar censor"),
         "pony": ("censored", "mosaic censoring", "bar censor"),
+        "anima": ("censored", "mosaic censoring", "bar censor"),
         "moss": ("马赛克", "打码", "遮挡"),
     },
     "nude": {
         "wai": ("nude", "nipples", "topless", "naked"),
         "pony": ("nude", "nipples", "topless", "naked"),
+        "anima": ("nude", "nipples", "topless", "naked"),
         "moss": ("裸体", "裸露", "乳头"),
     },
     "chibi": {
         "wai": ("chibi",),
         "pony": ("chibi",),
+        "anima": ("chibi",),
         "moss": ("Q版", "q版"),
     },
     "mono": {
         "wai": ("colorful", "color", "bad color", "saturated", "oversaturated"),
         "pony": ("colorful", "color", "bad color", "saturated", "oversaturated"),
+        "anima": ("colorful", "color", "bad color", "saturated", "oversaturated"),
         "moss": ("彩色", "鲜艳", "单色", "灰度"),
     },
 }
@@ -59,6 +72,7 @@ _TRIGGERS = {
 _NEG_NSFW_ADD = {
     "wai": ("nude", "naked", "topless", "nipples", "areola", "pussy", "sex"),
     "pony": ("nude", "naked", "topless", "nipples", "areola", "pussy", "sex"),
+    "anima": ("nude", "naked", "topless", "nipples", "areola", "pussy", "sex"),
     "moss": ("裸体", "裸露", "上半身裸露", "乳头", "乳晕", "小穴", "性交"),
 }
 
@@ -429,6 +443,59 @@ def build_positive(chars, tags, quality=QUALITY, prefix="", density="normal"):
     return ", ".join(out)
 
 
+def _anima_tag(t):
+    """Anima 的标签写法：小写、下划线换空格（score_* 例外），权重比 SDXL 拉得更开。"""
+    tag = str(t.get("tag") or t.get("en") or "").strip().lower()
+    if not tag:
+        return ""
+    if not re.match(r"^score_\d", tag):
+        tag = tag.replace("_", " ")
+    tag = re.sub(r"\s+", " ", tag)
+    try:
+        w = float(t.get("weight") or 1)
+    except Exception:
+        w = 1.0
+    if abs(w - 1.0) < 0.01:
+        return tag
+    return "(%s:%.1f)" % (tag, min(2.5, 1 + (w - 1) * 1.5))
+
+
+def build_anima(chars, tags, density="normal", nsfw=False):
+    """Anima-Turbo v1.0 独立模板：官方标签序 = quality/meta → 人数 → 角色 → 场景。"""
+    per_max, glob_max = density_limits(density)
+    words = [ANIMA_Q, "explicit" if nsfw else "safe"]
+    cnt = len(chars) or 1
+    if cnt > 1:
+        words.append("(%dgirls:1.5)" % cnt)
+    elif any((c.get("en") or c.get("name")) for c in chars):
+        words.append("1girl, solo")
+    for c in chars:
+        nm = c.get("en") or c.get("tag_en") or c.get("name") or c.get("zh")
+        if nm:
+            words.append(_anima_tag({"tag": nm}))
+        kept = 0
+        for t in (c.get("tags") or []):
+            x = _anima_tag(t)
+            if x:
+                words.append(x)
+                kept += 1
+                if kept >= per_max:
+                    break
+    kept = 0
+    for t in (tags or []):
+        x = _anima_tag(t)
+        if x:
+            words.append(x)
+            kept += 1
+            if kept >= glob_max:
+                break
+    out, seen = [], set()
+    for w in words:
+        if w.lower() not in seen:
+            seen.add(w.lower()); out.append(w)
+    return ", ".join(out)
+
+
 def generate(req):
     chars = req.get("chars") or []
     tags = req.get("tags") or []
@@ -463,7 +530,8 @@ def generate(req):
         if "solo" not in pony.lower():
             pony = pony + ", solo"
         pos_blob = pos_blob + " solo"
-    anima = build_positive(chars2, tags, ANIMA_Q, density=density)
+    animagine = build_positive(chars2, tags, ANIMAGINE_Q, density=density)
+    anima = build_anima(chars2, tags, density=density, nsfw=nsfw_on)
     try:
         krea = build_krea(chars2, tags, taglist, density=density)
     except Exception:
@@ -471,6 +539,7 @@ def generate(req):
     neg_wai = adapt_neg(build_neg("wai", neg_lvl), "wai", pos_blob, nsfw_on)
     neg_pony = adapt_neg(build_neg("pony", neg_lvl), "pony", pos_blob, nsfw_on)
     neg_moss = adapt_neg(build_neg("moss", neg_lvl), "moss", pos_blob, nsfw_on)
+    neg_anima = adapt_neg(build_neg("anima", neg_lvl), "anima", pos_blob, nsfw_on)
     # 单角色：负向加入多角色/克隆词，避免画成一群
     if (len(chars) or 1) == 1:
         _anti = "2girls, multiple_girls, split_screen, character_sheet, duplicate, multiple views"
@@ -478,6 +547,8 @@ def generate(req):
             neg_wai = neg_wai + ", " + _anti
         if neg_pony:
             neg_pony = neg_pony + ", " + _anti
+        if neg_anima:
+            neg_anima = neg_anima + ", " + _anti.replace("_", " ")
     return {
         "moss": moss,
         "neg_moss": neg_moss,
@@ -489,7 +560,9 @@ def generate(req):
         "krea": krea,
         "neg_krea": "",  # Krea2 是 CFG=1 蒸馏模型，负向不生效
         "anima": anima,
-        "neg_anima": (neg_wai + ", " + _anti) if ((len(chars) or 1) == 1 and neg_wai) else neg_wai,
+        "neg_anima": neg_anima,
+        "animagine": animagine,
+        "neg_animagine": neg_wai,
         "negLevel": str(neg_lvl).strip().lower(),
         "note": "本地生成",
     }
