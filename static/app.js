@@ -586,7 +586,7 @@
 
   /* ===================== 结果 ===================== */
   function renderChips() {
-    const map = [['anima', 'Anima-Turbo'], ['moss', 'MOSS'], ['wai', 'WAI'], ['pony', 'Pony'],
+    const map = [['anima', 'anima'], ['moss', 'MOSS'], ['wai', 'WAI'], ['pony', 'Pony'],
                  ['animagine', 'Animagine'], ['krea', 'Krea2'], ['exp', '扩写结果']];
     $('#secChips').innerHTML = map.map(([k, n]) =>
       `<span class="swchip ${S.sec[k] ? 'on' : ''}" data-k="${k}">${n}</span>`).join('');
@@ -606,8 +606,8 @@
     if (/MOSS/.test(k)) return 'moss';
     if (/WAI/.test(k)) return 'wai';
     if (/Pony/.test(k)) return 'pony';
-    if (/Animagine/.test(k)) return 'animagine';
-    if (/Anima/.test(k)) return 'anima';
+    if (/animagine/i.test(k)) return 'animagine';
+    if (/anima/i.test(k)) return 'anima';
     if (/Krea/.test(k)) return 'krea';
     return 'exp';
   }
@@ -873,7 +873,7 @@
         use: { wai: 1, pony: 1, moss: wantMoss ? 1 : 0 }, only: 'fast',
       });
       showResult(wantMoss ? [
-        ['Anima-Turbo v1.0', d.anima || '—'], ['负向 · Anima-Turbo', d.neg_anima || '—'],
+        ['anima', d.anima || '—'], ['负向 · anima', d.neg_anima || '—'],
         ['MOSS 中文', d.moss || '—'], ['负向 · MOSS', d.neg_zh || d.neg_moss || '—'],
         ['WAI / NoobAI', d.wai || '—'], ['负向 · WAI', d.neg || '—'],
         ['Pony V6 XL', d.pony || '—'], ['负向 · Pony', d.neg_pony || '—'],
@@ -881,7 +881,7 @@
         ['Krea2（自然语言）', d.krea || '—'],
         ['负向 · Krea2', d.neg_krea || '该模型 CFG=1，负向不生效（需把 KSampler cfg 调到 3 以上才起作用）'],
       ] : [
-        ['Anima-Turbo v1.0', d.anima || '—'], ['负向 · Anima-Turbo', d.neg_anima || '—'],
+        ['anima', d.anima || '—'], ['负向 · anima', d.neg_anima || '—'],
         ['WAI / NoobAI', d.wai || '—'], ['负向 · WAI', d.neg || '—'],
         ['Pony V6 XL', d.pony || '—'], ['负向 · Pony', d.neg_pony || '—'],
         ['Animagine XL', d.animagine || '—'], ['负向 · Animagine', d.neg_animagine || '—'],

@@ -94,10 +94,10 @@
   .submenu-list span.on{background:linear-gradient(135deg,#5a95f7,#3a72d4);border-color:transparent;color:#fff;font-weight:600}
   .submenu-list .cust{border-color:#bcd7ff;background:#f5faff;color:#2f6fe0}
   .submenu-list .addchar{border-style:dashed;border-color:#bcd7ff;color:#2f6fe0;background:#f5faff}
-  /* 标签卡：按窗口宽度自动增减列，卡片尺寸夹在 132~160px 之间，默认宽度下 4 列 */
+  /* 标签卡：按可用宽度自动增减列，每列至少 132px 并均分剩余空间，1920 宽下 4 列 */
   .taglist{flex:1;min-height:0;overflow-y:auto;display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(132px,160px));
-    justify-content:start;grid-auto-rows:min-content;gap:7px;align-content:start;padding-right:2px}
+    grid-template-columns:repeat(auto-fill,minmax(132px,1fr));
+    grid-auto-rows:min-content;gap:7px;align-content:start;padding-right:2px}
   .tag{border:1px solid #eef4fc;border-radius:10px;padding:7px 8px;background:#fbfdff;font-size:12px;
     color:#41526b;cursor:grab;transition:.15s;position:relative}
   .tag:hover{border-color:#bcd7ff;box-shadow:0 6px 16px rgba(76,139,245,.1);transform:translateY(-1px)}
@@ -261,6 +261,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122anima"></script>
+<script src="app.js?v=20261122anima2"></script>
 </body>
 </html>
