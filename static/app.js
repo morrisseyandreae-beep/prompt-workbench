@@ -31,8 +31,19 @@
     '偶像大师', '世界计划', 'BanG Dream', '胜利女神NIKKE', 'NIKKE'];
   const PAGE = 150;
 
+  /* 结果区模型开关的默认值；用户点过的状态存在 localStorage.secState，刷新后恢复 */
+  const SEC_KEYS = ['moss', 'wai', 'pony', 'anima', 'krea', 'exp'];
+  const SEC_DEF = { moss: true, wai: true, pony: true, anima: false, krea: false, exp: true };
+  function loadSec() {
+    const raw = LS.get('secState', null), out = Object.assign({}, SEC_DEF);
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      SEC_KEYS.forEach(k => { if (typeof raw[k] === 'boolean') out[k] = raw[k]; });
+    }
+    return out;
+  }
+
   const S = { lib: [], all: [], cat: '全部', sub: '全部', q: '', nsfw: false, favTop: false,
-              chars: [], global: [], shown: PAGE, sec: { moss: true, wai: true, pony: true, exp: true },
+              chars: [], global: [], shown: PAGE, sec: loadSec(),
               /* 拖标签到分类芯片的改动：en → { cat, sub }。分类归属一律走 catOf()，override 优先 */
               catOverrides: {} };
 
@@ -576,6 +587,7 @@
     $('#secChips').querySelectorAll('.swchip').forEach(el => el.onclick = () => {
       S.sec[el.dataset.k] = !S.sec[el.dataset.k];
       el.classList.toggle('on', S.sec[el.dataset.k]);
+      LS.set('secState', S.sec);
       applySec();
     });
   }
