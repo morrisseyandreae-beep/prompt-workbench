@@ -32,6 +32,8 @@
   const PAGE = 150;
 
   /* 结果区模型开关的默认值；用户点过的状态存在 localStorage.secState，刷新后恢复 */
+  /* 译文模式：off / sentence（整段）/ tokens（逐词） */
+  let TR_MODE = 'off';
   const SEC_KEYS = ['anima', 'moss', 'wai', 'pony', 'animagine', 'krea', 'exp'];
   const SEC_DEF = { anima: true, moss: true, wai: true, pony: true, animagine: false, krea: false, exp: true };
   function loadSec() {
@@ -619,21 +621,22 @@
   };
   const isEnPrompt = t => { const x = String(t || '').trim(); return !!x && x !== '—' && cjkRatio(x) < 0.2; };
 
+  const trBody = tr => tr.querySelector('.tb') || tr;
+
   async function fillTranslations() {
     document.querySelectorAll('#resBody .tr').forEach(el => el.remove());
-    const sw = $('#swTrans'), swTok = $('#swTransTok');
-    if (!sw || !sw.checked) return;
+    if (TR_MODE === 'off') return;
     const boxes = [];
     document.querySelectorAll('#resBody .sec').forEach(sec => {
       const out = sec.querySelector('.out');
       if (out && isEnPrompt(out.textContent)) boxes.push(out);
     });
     if (!boxes.length) return;
-    const tok = !!(swTok && swTok.checked);
+    const tok = TR_MODE === 'tokens';
     boxes.forEach(b => {
       const d = document.createElement('div');
       d.className = 'tr';
-      d.textContent = '翻译中…';
+      d.innerHTML = '<span class="th">' + (tok ? '逐词对照' : '中文') + '</span><span class="tb">翻译中…</span>';
       b.insertAdjacentElement('afterend', d);
     });
     try {
@@ -642,16 +645,23 @@
       boxes.forEach((b, i) => {
         const tr = b.nextElementSibling;
         if (!tr || !tr.classList.contains('tr')) return;
+        const tb = trBody(tr);
         if (tok) {
-          tr.innerHTML = (d.pairs[i] || []).map(([en, zh]) =>
+          tb.innerHTML = (d.pairs[i] || []).map(([en, zh]) =>
             `<span class="tp"><b>${esc(en)}</b><span>${esc(zh)}</span></span>`).join('');
         } else {
-          tr.textContent = (d.zh || [])[i] || '（无译文）';
+          tb.textContent = (d.zh || [])[i] || '（无译文）';
         }
       });
     } catch (e) {
-      document.querySelectorAll('#resBody .tr').forEach(el => { el.textContent = '翻译失败：' + e.message; });
+      document.querySelectorAll('#resBody .tr .tb').forEach(el => { el.textContent = '翻译失败：' + e.message; });
     }
+  }
+
+  function renderTrCtl() {
+    document.querySelectorAll('#trCtl .segbtn').forEach(b => {
+      b.classList.toggle('on', b.dataset.tr === TR_MODE);
+    });
   }
 
   function showResult(rows) {
@@ -661,7 +671,7 @@
       const fill = sec === 'exp' ? '<u data-fill="1">填入草稿</u>' : '';
       return `<div class="sec" data-sec="${sec}">
         <div class="lbl">${esc(k)}<span class="r">${fill}<u data-copy="${esc(k)}">复制</u></span></div>
-        <div class="out" data-k="${esc(k)}">${esc(v)}</div></div>`;
+        <div class="pair"><div class="out" data-k="${esc(k)}">${esc(v)}</div></div></div>`;
     }).join('');
     applySec();
     body.querySelectorAll('u[data-copy]').forEach(el => el.onclick = () => {
@@ -1437,8 +1447,9 @@
     if (c.polishMode && $('#selPolish')) $('#selPolish').value = c.polishMode;
     if (c.nsfw !== undefined) S.nsfw = !!c.nsfw;
     if (c.favTop !== undefined) S.favTop = !!c.favTop;
-    if ($('#swTrans')) $('#swTrans').checked = !!c.trans;
-    if ($('#swTransTok')) $('#swTransTok').checked = !!c.transTok;
+    TR_MODE = c.trans === 'tokens' ? 'tokens'
+      : (c.trans === 'sentence' || c.trans === true) ? 'sentence' : 'off';
+    renderTrCtl();
   }
   function saveSettings() {
     LS.set('settings', {
@@ -1449,8 +1460,7 @@
       neg: $('#selNeg').value,
       nsfw: S.nsfw,
       favTop: S.favTop,
-      trans: $('#swTrans') ? $('#swTrans').checked : false,
-      transTok: $('#swTransTok') ? $('#swTransTok').checked : false,
+      trans: TR_MODE,
     });
   }
   function bindSettings() {
@@ -1458,9 +1468,8 @@
       const el = document.querySelector(sel);
       if (el) el.addEventListener('change', saveSettings);
     });
-    ['#swTrans', '#swTransTok'].forEach(sel => {
-      const el = document.querySelector(sel);
-      if (el) el.addEventListener('change', () => { saveSettings(); fillTranslations(); });
+    document.querySelectorAll('#trCtl .segbtn').forEach(btn => {
+      btn.onclick = () => { TR_MODE = btn.dataset.tr; renderTrCtl(); saveSettings(); fillTranslations(); };
     });
   }
 

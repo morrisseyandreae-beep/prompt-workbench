@@ -177,14 +177,27 @@
   .swchips{display:flex;flex-wrap:wrap;gap:5px;margin-left:10px;min-width:0}
   .swchip{flex:0 0 auto;white-space:nowrap}
   #resBody .lbl{white-space:nowrap}
-  .trsw{font-size:11.5px;color:#5a6c85}
-  .trsw input{width:13px;height:13px}
-  /* 译文框：跟在正向/负向提示词下面，逐词模式下按词块换行 */
-  .tr{margin-top:6px;border:1px dashed #e2ebf8;border-radius:10px;background:#fbfdff;padding:7px 10px;
-    font-size:11.5px;line-height:1.75;color:#5a6c85;word-break:break-word}
+
+  /* 结果区右上角：译文三档分段控件 + 清空 */
+  .hdright{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .hdright .r{margin-left:0}
+  .trctl{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#8494ab}
+  .trctl-t{white-space:nowrap}
+  .seg{display:flex;border:1px solid #e2ebf8;border-radius:8px;overflow:hidden;background:#f8fbfe}
+  .segbtn{border:0;background:transparent;color:#7d8fa8;font-size:11.5px;line-height:1;padding:5px 9px;cursor:pointer;font-family:inherit}
+  .segbtn + .segbtn{border-left:1px solid #e8f0fb}
+  .segbtn:hover{color:#2f6fe0}
+  .segbtn.on{background:linear-gradient(135deg,#5a95f7,#3a72d4);color:#fff;font-weight:600}
+
+  /* 一条提示词一个框：英文原文 + 中文译文同框 */
+  .pair{border:1px solid #eef4fc;border-radius:11px;background:#fbfdff;overflow:hidden}
+  .pair .out{border:0;border-radius:0;background:transparent}
+  .tr{border-top:1px dashed #e4edfa;background:#f6faff;padding:7px 12px;
+    font-size:11.5px;line-height:1.8;color:#5a6c85;word-break:break-word}
   .tr .tp{display:inline-block;margin:0 9px 3px 0}
   .tr .tp b{color:#2f405c;font-weight:600;margin-right:4px}
   .tr .tp span{color:#7d8fa8}
+  .tr .th{display:block;font-size:10.5px;color:#a9b8cb;margin-bottom:3px}
 </style>
 </head>
 <body>
@@ -249,9 +262,17 @@
       <div class="grip-v"></div>
       <div class="card res">
         <div class="hd">结果 <span class="swchips" id="secChips"></span>
-          <label class="sw trsw" title="调用微软免鉴权翻译，给出整段中文"><input type="checkbox" id="swTrans">翻译</label>
-          <label class="sw trsw" title="按逗号拆开，逐词中英对照"><input type="checkbox" id="swTransTok">逐词</label>
-          <span class="r" id="btnClearRes">清空结果</span></div>
+          <span class="hdright">
+            <span class="trctl" id="trCtl" title="用微软免鉴权接口给提示词补中文">
+              <span class="trctl-t">译文</span>
+              <span class="seg">
+                <button type="button" class="segbtn on" data-tr="off">关</button>
+                <button type="button" class="segbtn" data-tr="sentence">整段</button>
+                <button type="button" class="segbtn" data-tr="tokens">逐词</button>
+              </span>
+            </span>
+            <span class="r" id="btnClearRes">清空结果</span>
+          </span></div>
         <div class="body" id="resBody"><div class="note" style="padding:26px;text-align:center">点「生成结果」后显示</div></div>
       </div>
     </div>
@@ -277,6 +298,6 @@
   </section>
 </main>
 
-<script src="app.js?v=20261122trans"></script>
+<script src="app.js?v=20261122trans2"></script>
 </body>
 </html>
